@@ -6,13 +6,13 @@ CalcIndep was created as an **"weekend experiment"** with Claude AI tool. My int
 
 The system was created with the Claude Opus 5.5 model with effort set to High, along a period of just 3 days. The initial prompt I provided to Claude was (in Spanish):
 
-*Serías capaz de hacer un sistema de cálculo independiente para planes de radioterapia externa? Tendría que poder importar planes de RT en formato DICOM, incluyendo CT, estructuras , plan y dosis. Tendría que hacer el cálculo con un algoritmo tipo collased cone al menos, y permitir añadir una curva de número CT frente a densidad electrónica. Debería tener corrección pot inhomogeneidades, y debería comparar la distribución de dosis importada con la distribución calculada , usando el gamma índex del artículo de Low, para cada estructura*
+*Serías capaz de hacer un sistema de cálculo independiente para planes de radioterapia externa? Tendría que poder importar planes de RT en formato DICOM, incluyendo CT, estructuras , plan y dosis. Tendría que hacer el cálculo con un algoritmo tipo collased cone al menos, y permitir añadir una curva de número CT frente a densidad electrónica. Debería tener corrección por inhomogeneidades, y debería comparar la distribución de dosis importada con la distribución calculada , usando el gamma índex del artículo de Low, para cada estructura*
 
 Initially, a Python version was created, and later a web app version was developed, giving instructions to Claude to port the Python code to Javascript exactly, checking that an exact traslation was done, allowing only dose differences below 0.001% between both versions. The final result of this code port was a web app of less than 1 MB, which can run IMRT and VMAT dose calculations from a web browser, using GPU if available!
 
 As an estimation, the "human time" needed to create both versions was about 5-6 hours, while the "Claude time" was about 20-25 hours.
 
-A general description of the capabilities of the software is provided below. More details can be found the folders of the Python and webapp versions.
+A general description of the capabilities of the software is provided below. More details can be found in the folders of the Python and webapp versions.
 
 **Of course, this system is not aimed to be used clinically, only for learning and fun!**
 
