@@ -1,0 +1,139 @@
+==============================================================================
+CalcIndep (Python desktop version) - THIRD-PARTY NOTICES
+Avisos de componentes de terceros
+==============================================================================
+
+CalcIndep is distributed under the MIT License (see the LICENSE file). This
+product includes data and code derived from the third-party components listed
+below. Each component keeps its own terms. The license texts, or the
+attribution that the source requires, are reproduced below.
+
+CalcIndep se distribuye bajo la licencia MIT (fichero LICENSE). Este producto
+incluye datos y codigo derivados de los componentes de terceros que se
+enumeran a continuacion. Cada componente conserva sus propias condiciones. Mas
+abajo se reproducen los textos de las licencias, o el reconocimiento que exige
+la fuente.
+
+CONTENTS / INDICE
+
+  1. EDKnrc energy deposition kernels (conehead repository)
+     License: MIT
+     Used in: data/kernels/edknrc_mono/edk_water_mono.npz
+
+  2. NIST XCOM photon cross sections (SRD 8)
+     License: NIST Standard Reference Data, attribution
+     Used in: calcindep/physics.py
+
+  3. Fonts embedded in the PDF manual (Inter, DejaVu)
+     License: SIL Open Font License 1.1 / Bitstream Vera license
+     Used in: docs/Manual_CalcIndep.pdf
+
+==============================================================================
+1. EDKnrc energy deposition kernels (conehead)
+==============================================================================
+
+Monoenergetic point energy deposition kernels in water (0.5-6.0 MeV),
+generated with EGSnrc/EDKnrc and published in the kernels/ directory of the
+conehead repository by Samuel Peet: https://github.com/samuelpeet/conehead
+
+Modification: the .egslst tables ("total" column) were read and stored as
+energy fraction per (cone, sphere) bin in
+data/kernels/edknrc_mono/edk_water_mono.npz.
+
+------------------------------------------------------------------------------
+MIT License (conehead)
+------------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2018 samuelpeet
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+------------------------------------------------------------------------------
+
+==============================================================================
+2. NIST XCOM photon cross sections
+==============================================================================
+
+The mass attenuation coefficients of liquid water (28 energies between 0.01
+and 20 MeV, total attenuation with coherent scattering) used in
+calcindep/physics.py come from:
+
+  M.J. Berger, J.H. Hubbell, S.M. Seltzer, J. Chang, J.S. Coursey, R. Sukumar,
+  D.S. Zucker and K. Olsen. XCOM: Photon Cross Sections Database, NIST
+  Standard Reference Database 8 (XGAM). National Institute of Standards and
+  Technology, Gaithersburg, MD. https://dx.doi.org/10.18434/T48G6X
+
+(c) 1990, 1998 copyright by the U.S. Secretary of Commerce on behalf of the
+United States of America. All rights reserved.
+
+NIST provides these data as a public service and assumes no liability for
+their use. Permission to use NIST data is subject to providing appropriate
+acknowledgment of NIST's creation of the data, which is given here.
+
+==============================================================================
+3. Fonts embedded in the PDF manual
+==============================================================================
+
+docs/Manual_CalcIndep.pdf embeds subsets of the Inter typeface (Copyright (c)
+2016 The Inter Project Authors, SIL Open Font License 1.1) and of the DejaVu
+Sans and DejaVu Sans Mono typefaces (Bitstream Vera Fonts copyright (c) 2003
+Bitstream, Inc.; DejaVu changes are in the public domain). Both licenses allow
+fonts to be embedded in documents. The font files themselves are not
+distributed in this repository.
+
+==============================================================================
+4. Published methods (no third-party code)
+==============================================================================
+
+The following code is original, but it implements published methods:
+
+  - Collapsed cone superposition: A. Ahnesjo, "Collapsed cone convolution of
+    radiant energy for photon dose calculation in heterogeneous media", Med.
+    Phys. 16(4), 577-592 (1989).
+  - Energy deposition kernels: T.R. Mackie, A.F. Bielajew, D.W.O. Rogers and
+    J.J. Battista, "Generation of photon energy deposition kernels using the
+    EGS Monte Carlo code", Phys. Med. Biol. 33, 1-20 (1988).
+  - Gamma index: D.A. Low, W.B. Harms, S. Mutic and J.A. Purdy, "A technique
+    for the quantitative evaluation of dose distributions", Med. Phys. 25(5),
+    656-661 (1998).
+  - Non-negative least squares: C.L. Lawson and R.J. Hanson, Solving Least
+    Squares Problems, Prentice-Hall (1974).
+
+==============================================================================
+5. Runtime dependencies (not included in this repository)
+==============================================================================
+
+The following libraries are installed separately (environment.yml,
+requirements.txt). They are not part of this repository and each one is
+distributed under its own license.
+
+  Package               License
+  --------------------  ---------------------------------------------------
+  Python, tkinter       PSF License
+  NumPy                 BSD-3-Clause
+  SciPy                 BSD-3-Clause
+  Numba                 BSD-2-Clause
+  llvmlite              BSD-2-Clause (includes LLVM: Apache-2.0 with LLVM
+                        exception)
+  Matplotlib            Matplotlib License (PSF-based)
+  scikit-image          BSD-3-Clause
+  pydicom               MIT
+  PyOpenCL (optional)   MIT

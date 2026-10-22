@@ -1,0 +1,3 @@
+Fuente del manual en PDF (HTML + CSS + capturas).
+Para regenerarlo tras editar manual.html (requiere el paquete weasyprint):
+    python -c "import weasyprint; weasyprint.HTML('manual.html').write_pdf('../Manual_CalcIndep.pdf')"

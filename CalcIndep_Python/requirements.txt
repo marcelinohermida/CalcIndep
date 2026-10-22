@@ -1,0 +1,6 @@
+numpy
+scipy
+numba
+matplotlib
+scikit-image
+pydicom>=2.4

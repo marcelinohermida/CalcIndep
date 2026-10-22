@@ -1,0 +1,14 @@
+name: calcindep
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - libblas=*=*openblas   # OpenBLAS: evita los conflictos de DLL de MKL en Windows
+  - scipy
+  - numba
+  - matplotlib-base      # sin Qt: la interfaz usa tkinter
+  - scikit-image
+  - pydicom>=2.4
+  - tk
+  - setuptools

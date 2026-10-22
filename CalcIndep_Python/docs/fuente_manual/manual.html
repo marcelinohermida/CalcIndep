@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CalcIndep 1.0 · Manual de usuario</title>
+<meta name="author" content="CalcIndep">
+<meta name="description" content="Manual de usuario de CalcIndep 1.0: instalación, verificación de planes, modelos de haz, comisionado, curvas HU-densidad y ajustes.">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<!-- ============================ PORTADA ============================ -->
+<section class="cover">
+  <div class="cover-band"></div>
+  <div class="cover-body">
+    <div class="cover-kicker">Manual de usuario</div>
+    <h1 class="cover-title">CalcIndep</h1>
+    <div class="cover-sub">Cálculo independiente de dosis para radioterapia externa con fotones</div>
+    <div class="cover-meta">Versión 1.0 · octubre de 2026</div>
+  </div>
+  <div class="cover-note">
+    <strong>Aviso.</strong> CalcIndep es una herramienta de desarrollo propio y no es un producto sanitario
+    certificado. Antes de usarla en clínica, cada centro debe comisionar los modelos de haz de sus máquinas,
+    cargar la curva HU–densidad de su CT y validar el conjunto frente a medidas y frente a su planificador.
+    El resultado de una verificación no sustituye el juicio del radiofísico.
+  </div>
+</section>
+
+<!-- ============================ ÍNDICE ============================ -->
+<section class="toc-page">
+  <h2 class="nonum">Contenido</h2>
+  <ul class="toc">
+    <li class="l1"><a href="#c-que-es"></a></li>
+    <li class="l1"><a href="#c-instalacion"></a></li>
+    <li class="l2"><a href="#s-requisitos"></a></li>
+    <li class="l2"><a href="#s-paquete"></a></li>
+    <li class="l2"><a href="#s-pasos"></a></li>
+    <li class="l2"><a href="#s-gpu-inst"></a></li>
+    <li class="l2"><a href="#s-actualizar"></a></li>
+    <li class="l2"><a href="#s-desinstalar"></a></li>
+    <li class="l1"><a href="#c-primeros"></a></li>
+    <li class="l2"><a href="#s-ventana"></a></li>
+    <li class="l2"><a href="#s-biblioteca"></a></li>
+    <li class="l2"><a href="#s-antes"></a></li>
+    <li class="l1"><a href="#c-verificar"></a></li>
+    <li class="l2"><a href="#s-exportar"></a></li>
+    <li class="l2"><a href="#s-pasos-verif"></a></li>
+    <li class="l2"><a href="#s-resultados"></a></li>
+    <li class="l2"><a href="#s-visor"></a></li>
+    <li class="l2"><a href="#s-ficheros-res"></a></li>
+    <li class="l1"><a href="#c-modelos"></a></li>
+    <li class="l1"><a href="#c-comisionado"></a></li>
+    <li class="l1"><a href="#c-curvas"></a></li>
+    <li class="l1"><a href="#c-ajustes"></a></li>
+    <li class="l1"><a href="#c-carpetas"></a></li>
+    <li class="l1"><a href="#c-problemas"></a></li>
+    <li class="l1"><a href="#c-limitaciones"></a></li>
+    <li class="l1 annex"><a href="#a-calculo"></a></li>
+    <li class="l1 annex"><a href="#a-cli"></a></li>
+    <li class="l1 annex"><a href="#a-refs"></a></li>
+  </ul>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section class="chapter">
+<h2 id="c-que-es">Qué es CalcIndep</h2>
+
+<p>CalcIndep recalcula la dosis de un plan de radioterapia externa con fotones de forma independiente del
+planificador y compara las dos distribuciones. Sirve como control de calidad específico del paciente
+antes del tratamiento.</p>
+
+<div class="flow">
+  <div class="step"><b>1. Importa</b><span>CT, RTSTRUCT, RTPLAN y RTDOSE exportados del planificador</span></div>
+  <div class="arrow">→</div>
+  <div class="step"><b>2. Recalcula</b><span>Convolución-superposición collapsed cone con corrección de heterogeneidades</span></div>
+  <div class="arrow">→</div>
+  <div class="step"><b>3. Compara</b><span>Índice gamma 3D y diferencias de HDV en cada estructura</span></div>
+  <div class="arrow">→</div>
+  <div class="step"><b>4. Documenta</b><span>Informe HTML, RTDOSE calculado y resumen en JSON</span></div>
+</div>
+
+<p>Admite 3D-CRT, IMRT (step-and-shoot y ventana deslizante) y VMAT con los MLC Millennium 120 y HD120 de
+Varian. Todo se maneja desde una ventana con cinco pestañas; no hace falta usar la consola.</p>
+
+<h3 class="nonum">Qué no hace</h3>
+<ul>
+  <li>No modela cuñas físicas, cuñas dinámicas (EDW), bloques ni conos de radiocirugía. Si el plan los
+      tiene, el cálculo se hace sin ellos y el informe lo avisa.</li>
+  <li>Los kernels incluidos llegan a 6 MeV: sirven para 6X y 6FFF. Para 10X o 15X hay que añadir kernels.</li>
+  <li>No tiene la certificación de producto sanitario. La responsabilidad de su validación y de su uso
+      es del centro que lo emplea.</li>
+</ul>
+<p>La lista completa está en el capítulo <a class="xref" href="#c-limitaciones"></a>.</p>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section class="chapter">
+<h2 id="c-instalacion">Instalación</h2>
+
+<h3 id="s-requisitos">Requisitos</h3>
+<table class="kv">
+  <tr><th>Sistema</th><td>Windows 10 u 11 de 64 bits.</td></tr>
+  <tr><th>Python</th><td>Miniforge, Miniconda o Anaconda. Si no hay ninguno instalado, el paso 1 explica cómo
+      instalar Miniforge sin permisos de administrador.</td></tr>
+  <tr><th>Conexión</th><td>Acceso a internet durante la instalación (descarga de paquetes de Python, unos
+      cientos de MB). Después, el programa funciona sin conexión.</td></tr>
+  <tr><th>Disco</th><td>Unos 2 GB libres para Miniforge y el entorno del programa, más el espacio de los
+      resultados (unos 5 MB por verificación con el RTDOSE incluido).</td></tr>
+  <tr><th>Visor de PDF</th><td>Para abrir este manual desde el menú Ayuda.</td></tr>
+  <tr><th>GPU</th><td>Opcional. Si el ordenador tiene una tarjeta gráfica compatible con OpenCL, la
+      superposición puede hacerse en ella (apartado <a class="xref" href="#s-gpu-inst"></a>).</td></tr>
+</table>
+
+<h3 id="s-paquete">Contenido del paquete</h3>
+<p>El paquete es un fichero ZIP (por ejemplo, el que se descarga del repositorio de GitHub con <b>Code → Download ZIP</b>) con la carpeta del programa:</p>
+<table class="grid">
+  <thead><tr><th>Fichero o carpeta</th><th>Para qué sirve</th></tr></thead>
+  <tbody>
+  <tr><td><code>LEEME_INSTALACION.txt</code></td><td>Instrucciones de instalación resumidas.</td></tr>
+  <tr><td><code>instalar_windows.bat</code></td><td>Instalador. Se ejecuta una vez (y otra vez al actualizar).</td></tr>
+  <tr><td><code>instalar_gpu.bat</code></td><td>Instalación opcional de la superposición en GPU.</td></tr>
+  <tr><td><code>CalcIndep.pyw</code></td><td>Programa principal (lo abre el acceso directo).</td></tr>
+  <tr><td><code>docs\Manual_CalcIndep.pdf</code></td><td>Este manual. Se abre con la tecla F1.</td></tr>
+  <tr><td><code>calcindep\</code></td><td>Código del programa.</td></tr>
+  <tr><td><code>data\</code></td><td>Kernels de EDKnrc, modelo de haz genérico 6X y curva HU–densidad de ejemplo.</td></tr>
+  <tr><td><code>examples\</code></td><td>Datos de haz sintéticos y configuraciones de ejemplo.</td></tr>
+  <tr><td><code>README.md</code>, <code>README.en.md</code></td><td>Documentación técnica, en español y en inglés.</td></tr>
+  <tr><td><code>LICENSE</code>, <code>THIRD_PARTY_NOTICES.txt</code></td><td>Licencia del programa (MIT) y licencias de los componentes de terceros.</td></tr>
+  <tr><td><code>environment.yml</code>, <code>requirements.txt</code></td><td>Lista de paquetes de Python que usa el instalador.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="s-pasos">Pasos de la instalación</h3>
+
+<div class="numstep">
+<div class="n">1</div>
+<div class="b">
+<h4>Instale Miniforge (solo si no tiene Anaconda ni Miniconda)</h4>
+<p>Descargue el instalador de Windows desde <span class="url">conda-forge.org/download</span> y ejecútelo con
+las opciones por defecto: <b>Just Me</b> (no necesita permisos de administrador) y la carpeta que propone
+(<code>C:\Users\&lt;usuario&gt;\miniforge3</code>).</p>
+<p class="note">Se recomienda Miniforge porque descarga los paquetes solo del canal libre conda-forge. Los
+paquetes del canal por defecto de Anaconda requieren una licencia de pago en organizaciones de 200
+empleados o más, lo que incluye a la mayoría de los hospitales. Si ya tiene Anaconda o Miniconda, el
+instalador los usa y el entorno de CalcIndep se crea igualmente con conda-forge.</p>
+</div></div>
+
+<div class="numstep">
+<div class="n">2</div>
+<div class="b">
+<h4>Descomprima el paquete en una carpeta fija</h4>
+<ol>
+  <li>Antes de descomprimir, haga clic derecho en el ZIP → <b>Propiedades</b> → marque
+      <b>Desbloquear</b> (si aparece) → <b>Aceptar</b>. Así Windows no bloquea los ficheros <code>.bat</code>.</li>
+  <li>Clic derecho → <b>Extraer todo…</b> y elija una carpeta donde vaya a quedarse el programa, por ejemplo
+      <code>C:\CalcIndep</code> o <code>Documentos\CalcIndep</code>.</li>
+</ol>
+<p class="note">Evite rutas con tildes, eñes o caracteres especiales y no ejecute el programa desde dentro del
+ZIP ni desde la carpeta de Descargas. El acceso directo apunta a la carpeta donde se instala: si después la
+mueve, ejecute de nuevo el instalador.</p>
+</div></div>
+
+<div class="numstep">
+<div class="n">3</div>
+<div class="b">
+<h4>Ejecute <code>instalar_windows.bat</code></h4>
+<p>Haga doble clic en <code>instalar_windows.bat</code>. Si aparece el aviso «Windows protegió su PC», pulse
+<b>Más información</b> → <b>Ejecutar de todas formas</b>.</p>
+<p>El instalador hace lo siguiente, sin pedir nada más:</p>
+<ol>
+  <li>Localiza Miniforge, Miniconda o Anaconda.</li>
+  <li>Crea el entorno de Python <code>calcindep</code> con los paquetes necesarios (5–15 minutos, según la
+      conexión).</li>
+  <li>Comprueba que todos los paquetes se cargan.</li>
+  <li>Prepara el motor de cálculo (1–3 minutos, solo esta vez).</li>
+  <li>Crea el acceso directo <b>CalcIndep</b> en el escritorio y, en la carpeta del programa, los lanzadores
+      <code>CalcIndep.bat</code> y <code>CalcIndep_diagnostico.bat</code>. Este último abre el programa con consola
+      para resolver problemas.</li>
+</ol>
+<p>Al terminar muestra «Instalación terminada». Pulse una tecla para cerrar la ventana.</p>
+<p class="note">Si el proxy del hospital impide que conda descargue paquetes, el instalador lo intenta con el
+entorno base y pip. Si tampoco funciona, consulte el capítulo <a class="xref" href="#c-problemas"></a>.</p>
+</div></div>
+
+<div class="numstep">
+<div class="n">4</div>
+<div class="b">
+<h4>Abra CalcIndep</h4>
+<p>Haga doble clic en el acceso directo <b>CalcIndep</b> del escritorio. Primero aparece una ventana de carga;
+la primera vez puede tardar uno o dos minutos. En la barra inferior de la ventana principal se lee «Preparando
+el motor de cálculo…» y, cuando termina, «Motor de cálculo listo · superposición en CPU» (o en GPU).</p>
+<p>La primera vez se crea la biblioteca en <code>Documentos\calcindep</code> con el modelo genérico 6X y la
+curva de ejemplo (apartado <a class="xref" href="#s-biblioteca"></a>).</p>
+</div></div>
+
+<h3 id="s-gpu-inst">Superposición en GPU (opcional)</h3>
+<p>Si el ordenador tiene una tarjeta gráfica con OpenCL (incluidas muchas gráficas integradas de Intel), la
+superposición puede hacerse en ella. En un portátil con Intel HD Graphics 520, un VMAT de dos arcos pasó de
+590 s a 215 s.</p>
+<ol>
+  <li>Instale CalcIndep con <code>instalar_windows.bat</code>.</li>
+  <li>Ejecute <code>instalar_gpu.bat</code>. Añade el paquete <code>pyopencl</code> sin cambiar los demás,
+      comprueba que el programa sigue funcionando y compara la GPU con la CPU.</li>
+  <li>No hay que configurar nada más: el programa usa la GPU solo si da la misma dosis que la CPU (diferencia
+      menor del 0.01% de la dosis máxima) y es al menos 1.2 veces más rápida.</li>
+</ol>
+<p>Si el ordenador no tiene GPU, o no se ejecuta este paso, CalcIndep calcula en la CPU. Los detalles están en el
+capítulo <a class="xref" href="#c-ajustes"></a>.</p>
+
+<h3 id="s-actualizar">Actualizar a una versión nueva</h3>
+<ol>
+  <li>Cierre CalcIndep.</li>
+  <li>Descomprima la versión nueva en la misma carpeta y acepte sustituir los ficheros.</li>
+  <li>Ejecute de nuevo <code>instalar_windows.bat</code> (actualiza el entorno si hace falta).</li>
+</ol>
+<p>Los modelos de haz, las curvas, los resultados y los ajustes no están en la carpeta del programa, así que se
+conservan. La versión en uso aparece en el título de la ventana, en <b>Ayuda → Acerca de CalcIndep</b>, en
+cada informe y en cada <code>resumen.json</code>.</p>
+
+<h3 id="s-desinstalar">Desinstalar</h3>
+<ol>
+  <li>Borre el acceso directo del escritorio y la carpeta del programa.</li>
+  <li>Elimine el entorno de Python: abra <b>Miniforge Prompt</b> (o Anaconda Prompt) desde el menú Inicio y
+      escriba <code>conda env remove -n calcindep</code>.</li>
+  <li>Si no quiere conservar los ajustes, borre <code>%APPDATA%\calcindep</code>.</li>
+  <li>La biblioteca (<code>Documentos\calcindep</code>) contiene sus modelos, curvas y resultados. Bórrela solo
+      si ya no los necesita.</li>
+</ol>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section class="chapter">
+<h2 id="c-primeros">Primeros pasos</h2>
+
+<h3 id="s-ventana">La ventana principal</h3>
+<figure class="wide">
+  <img src="img/inicio.png" alt="Ventana principal de CalcIndep con la pestaña Verificar plan">
+  <figcaption>Ventana principal al abrir el programa.</figcaption>
+</figure>
+
+<table class="grid">
+  <thead><tr><th style="width:28%">Pestaña</th><th>Para qué sirve</th></tr></thead>
+  <tbody>
+  <tr><td><b>Verificar plan</b></td><td>Calcular un plan y compararlo con la dosis del planificador. Es la que se usa a diario.</td></tr>
+  <tr><td><b>Modelos de haz</b></td><td>Revisar, editar, importar y elegir el modelo por defecto.</td></tr>
+  <tr><td><b>Comisionado</b></td><td>Crear un modelo de haz a partir de las medidas de la máquina.</td></tr>
+  <tr><td><b>Curvas HU–densidad</b></td><td>Crear y editar curvas y asociarlas a los escáneres CT.</td></tr>
+  <tr><td><b>Ajustes</b></td><td>Carpetas, opciones de cálculo y uso de la GPU.</td></tr>
+  </tbody>
+</table>
+
+<p><b>Menú Archivo:</b> abrir la carpeta de la biblioteca o la de resultados, y salir.<br>
+<b>Menú Ayuda:</b> <b>Manual de usuario (PDF)</b>, que también se abre con la tecla <span class="key">F1</span>;
+<b>Abrir carpeta de ajustes y registro</b>, donde están los ficheros que conviene enviar si hay un error; y
+<b>Acerca de CalcIndep</b>, con la versión.</p>
+<p>La barra inferior muestra el estado del motor de cálculo y el dispositivo que hace la superposición
+(CPU o GPU).</p>
+
+<h3 id="s-biblioteca">La biblioteca</h3>
+<p>Los modelos, las curvas y los resultados se guardan en una carpeta llamada biblioteca. Por defecto es
+<code>Documentos\calcindep</code>:</p>
+<table class="grid">
+  <thead><tr><th style="width:30%">Subcarpeta</th><th>Contenido</th></tr></thead>
+  <tbody>
+  <tr><td><code>modelos</code></td><td>Modelos de haz (un fichero JSON por modelo).</td></tr>
+  <tr><td><code>curvas_hu</code></td><td>Curvas HU–densidad electrónica (CSV).</td></tr>
+  <tr><td><code>comisionado</code></td><td>Configuraciones e informes de comisionado.</td></tr>
+  <tr><td><code>resultados</code></td><td>Una carpeta por verificación.</td></tr>
+  </tbody>
+</table>
+<p>La biblioteca puede estar en una carpeta de red (pestaña <b>Ajustes</b>). Así todos los puestos del servicio
+usan los mismos modelos y curvas, y los resultados quedan en un único sitio.</p>
+
+<h3 id="s-antes">Antes de verificar planes clínicos</h3>
+<p>El modelo genérico 6X y la curva de ejemplo solo sirven para probar el programa. Antes del uso clínico:</p>
+<ol class="check">
+  <li><b>Curva HU–densidad</b> de cada CT de simulación (capítulo <a class="xref" href="#c-curvas"></a>).</li>
+  <li><b>Modelo de haz comisionado</b> para cada máquina, energía y modo de fluencia
+      (capítulo <a class="xref" href="#c-comisionado"></a>), con los parámetros de cada MLC que use la máquina.</li>
+  <li><b>Validación</b> del conjunto: campos sencillos en agua frente a medidas, y planes clínicos de cada
+      técnica y localización frente al planificador y frente a la verificación experimental.</li>
+  <li><b>Criterio de aceptación</b> del centro: criterio gamma, umbral y porcentaje de aprobación, y qué
+      hacer cuando un plan no cumple.</li>
+</ol>
+<p>Mientras un plan use un modelo sin comisionar, cada resultado lleva el aviso «Modelo de haz no
+comisionado: resultado no válido para uso clínico».</p>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section class="chapter">
+<h2 id="c-verificar">Verificar un plan</h2>
+
+<h3 id="s-exportar">Exportar el plan desde el planificador</h3>
+<p>Exporte a una carpeta los cuatro objetos DICOM del plan: <b>CT</b>, <b>RTSTRUCT</b>, <b>RTPLAN</b> y
+<b>RTDOSE</b>. La carpeta puede contener varios planes y pacientes; se elige uno en el programa.</p>
+<ul>
+  <li>Exporte la dosis del plan (DoseSummationType PLAN). Si solo hay dosis por haz, se suman.</li>
+  <li>La matriz de dosis del planificador define la rejilla de cálculo. El TERMA se traza a través de todo el CT,
+      así que la atenuación es correcta aunque la matriz no cubra todo el paciente.</li>
+  <li>El conjunto de estructuras debe tener una estructura de tipo EXTERNAL. Sin ella, el cálculo y la gamma
+      usan toda la rejilla.</li>
+  <li>Si el RTSTRUCT no incluye la densidad asignada a la mesa, asígnela en el paso 2.</li>
+</ul>
+
+<h3 id="s-pasos-verif">Pasos</h3>
+<div class="side">
+<figure class="tall">
+  <img src="img/plan.png" alt="Panel izquierdo de la pestaña Verificar plan con un plan cargado">
+  <figcaption>Panel de entrada con un plan IMRT sintético cargado.</figcaption>
+</figure>
+<div class="sidetext">
+<p><b>1. Plan exportado del TPS.</b> Pulse <b>Examinar…</b> y elija la carpeta. El programa lee las cabeceras
+DICOM y llena la lista <b>Plan</b> (el más reciente primero). Debajo se ven el paciente, la prescripción, el
+número de cortes del CT, el conjunto de estructuras, la dosis del TPS y, en rojo, lo que falte.</p>
+<p>La tabla <b>Haces</b> muestra cada haz con su máquina, técnica, energía, UM, MLC y modelo de haz. El
+modelo se elige así:</p>
+<ol>
+  <li>el modelo marcado como <b>Default</b>, si es de la misma energía y modo de fluencia;</li>
+  <li>si no, el último elegido para esa máquina y energía;</li>
+  <li>si no, un modelo de la misma máquina, energía y modo.</li>
+</ol>
+<p>Con <b>doble clic</b> en un haz se cambia el modelo de todos los haces de esa máquina y energía, y la
+elección se recuerda. Los textos en naranja son avisos (modelo sin comisionar, de otra máquina); en rojo,
+errores que impiden calcular (haz sin modelo, MLC no reconocido o sin parámetros en el modelo).</p>
+</div>
+</div>
+
+<p><b>2. Densidades.</b> Elija la <b>Curva HU–densidad</b>. La curva queda asociada al escáner del CT y se propone
+sola en los planes siguientes del mismo escáner.</p>
+<ul>
+  <li><b>Fuera del External: aire</b> (recomendado). Todo lo que queda fuera del External se trata como aire,
+      salvo las estructuras de soporte.</li>
+  <li><b>Conservar estructuras de soporte (mesa)</b>: las estructuras de tipo SUPPORT mantienen su densidad.</li>
+  <li><b>Densidades por estructura…</b>: asigna a una estructura un valor en HU o en densidad electrónica
+      relativa (mesa, bolus, artefactos de contraste o de prótesis). Las densidades asignadas en el RTSTRUCT
+      se respetan sin hacer nada.</li>
+</ul>
+
+<p><b>3. Rejilla de cálculo.</b> Por defecto, <b>La misma que la dosis del TPS</b>. La opción <b>Vóxel isótropo
+de … mm</b> permite una rejilla más gruesa (más rápida) o más fina.</p>
+
+<p><b>4. Índice gamma.</b></p>
+<table class="grid compact">
+  <thead><tr><th style="width:34%">Campo</th><th>Significado</th><th style="width:18%">Valor inicial</th></tr></thead>
+  <tbody>
+  <tr><td>Diferencia de dosis</td><td>Tolerancia de dosis del criterio gamma.</td><td>3%</td></tr>
+  <tr><td>Distancia (DTA)</td><td>Tolerancia de distancia.</td><td>2 mm</td></tr>
+  <tr><td>Tipo</td><td>Global (% de la normalización) o local (% de la dosis en cada punto).</td><td>Global</td></tr>
+  <tr><td>Umbral de dosis</td><td>Solo se evalúan los puntos por encima de este % de la normalización.</td><td>10%</td></tr>
+  <tr><td>Normalización</td><td>Máximo de la dosis de referencia o prescripción del plan.</td><td>Máximo</td></tr>
+  <tr><td>Distribución de referencia</td><td>Dosis del TPS o cálculo independiente.</td><td>Dosis del TPS</td></tr>
+  <tr><td>Aprobado si γ ≤ 1 en al menos</td><td>Porcentaje mínimo de puntos con γ ≤ 1.</td><td>95%</td></tr>
+  </tbody>
+</table>
+<p>El programa recuerda los últimos valores usados.</p>
+
+<p><b>5. Resultados.</b> Muestra la carpeta donde se guardarán. Deje marcada <b>Guardar la dosis calculada
+como RTDOSE</b> si quiere importarla en Eclipse.</p>
+
+<p>Pulse <b>Calcular y comparar</b>. Debajo del botón se ven el avance y el tiempo restante estimado.
+<b>Cancelar</b> detiene el cálculo. El detalle de cada etapa aparece en la pestaña <b>Registro</b>.</p>
+
+<h3 id="s-resultados">Resultado de la verificación</h3>
+<figure class="wide">
+  <img src="img/resumen.png" alt="Pestaña Resumen con el veredicto CUMPLE, avisos y tabla por estructura">
+  <figcaption>Pestaña Resumen. Caso sintético calculado con el modelo genérico: por eso aparecen los avisos de
+  modelo no comisionado.</figcaption>
+</figure>
+
+<p>Arriba se muestra el <b>veredicto</b> (CUMPLE o NO CUMPLE), el resultado gamma en el External, la
+normalización y la dosis en el isocentro de los dos cálculos. El recuadro amarillo recoge los avisos, que
+conviene leer siempre.</p>
+
+<div class="callout">
+<b>Criterio de aprobación.</b> El plan cumple si el porcentaje de puntos con γ ≤ 1 alcanza el umbral de
+aprobación dentro del External <b>y</b> en cada estructura anatómica con al menos 10 puntos evaluados. No cuentan
+las estructuras de tipo SUPPORT, MARKER, BOLUS y similares. Así, un fallo localizado en el PTV no queda oculto
+por un buen resultado global.
+</div>
+
+<p>La tabla tiene una fila por estructura:</p>
+<table class="grid compact">
+  <thead><tr><th style="width:30%">Columna</th><th>Contenido</th></tr></thead>
+  <tbody>
+  <tr><td>Vol. (cc), Puntos</td><td>Volumen de la estructura y número de puntos evaluados (por encima del umbral).</td></tr>
+  <tr><td>γ≤1 (%)</td><td>Porcentaje de puntos que pasan el criterio gamma.</td></tr>
+  <tr><td>γ medio, γ p95, γ máx.</td><td>Media, percentil 95 y máximo de γ en la estructura.</td></tr>
+  <tr><td>Estado</td><td><b>Cumple</b> o <b>No cumple</b>. <b>No cumple (no cuenta)</b>: no alcanza el umbral, pero es
+      una estructura no anatómica (soporte, marcador, bolus) y no interviene en el veredicto. <b>Sin puntos</b>: menos de 10 puntos evaluados.</td></tr>
+  <tr><td>Dmedia TPS, Dmedia cálc.</td><td>Dosis media con cada cálculo (Gy).</td></tr>
+  <tr><td>ΔDmedia, ΔD95, ΔD2, ΔDmáx</td><td>Diferencias del cálculo independiente respecto al TPS (%).</td></tr>
+  </tbody>
+</table>
+<p><b>Abrir informe HTML</b> abre el informe en el navegador; <b>Abrir carpeta de resultados</b>, la carpeta de esa
+verificación.</p>
+
+<h3 id="s-visor">Visor de dosis y DVH</h3>
+<figure class="wide">
+  <img src="img/visor.png" alt="Visor de dosis con cuatro paneles: dosis TPS, cálculo independiente, diferencia y gamma">
+  <figcaption>Visor de dosis: dosis del TPS, cálculo independiente, diferencia (% de la normalización) y gamma.</figcaption>
+</figure>
+<ul>
+  <li><b>Axial, Coronal, Sagital</b> cambian el plano. La barra deslizante cambia de corte;
+      <b>Ir al isocentro</b> e <b>Ir al máximo de dosis</b> llevan a esos puntos.</li>
+  <li>Al pasar el cursor sobre una imagen se leen los valores en la parte inferior.</li>
+  <li><b>Contornos</b> muestra u oculta los contornos; en la lista <b>Estructuras</b> de la derecha se eligen
+      cuáles (Ctrl+clic para varias).</li>
+  <li><b>Perfil</b>: con la dirección <b>Libre</b> se arrastra una línea sobre cualquiera de las imágenes; con
+      <b>Horizontal</b> o <b>Vertical</b> basta un clic. Se muestran la dosis del TPS y la de CalcIndep a lo largo de
+      la línea y su diferencia. <b>Borrar perfil</b> la quita.</li>
+  <li><b>Maximizar visor</b> oculta el panel izquierdo para ver las imágenes más grandes. Se pulsa otra vez para
+      volver.</li>
+</ul>
+<figure class="mid">
+  <img src="img/dvh.png" alt="Pestaña DVH con las curvas del TPS en línea continua y las del cálculo en discontinua">
+  <figcaption>DVH comparado: línea continua, TPS; discontinua, CalcIndep.</figcaption>
+</figure>
+
+<h3 id="s-ficheros-res">Ficheros de cada verificación</h3>
+<p>Cada verificación se guarda en una carpeta propia dentro de <code>resultados</code>, con el nombre
+<code>&lt;ID paciente&gt;_&lt;plan&gt;_&lt;fecha&gt;_&lt;hora&gt;</code>:</p>
+<table class="grid compact">
+  <thead><tr><th style="width:42%">Fichero</th><th>Contenido</th></tr></thead>
+  <tbody>
+  <tr><td><code>informe_….html</code></td><td>Informe autocontenido (se abre con cualquier navegador y se puede imprimir o guardar como PDF).</td></tr>
+  <tr><td><code>RD_calculo_independiente.dcm</code></td><td>Dosis calculada en formato RTDOSE.</td></tr>
+  <tr><td><code>resumen.json</code></td><td>Datos para trazabilidad: versión del programa, criterio, resultados por estructura, modelos, curva, opciones, avisos, ficheros de entrada y dispositivo de cálculo.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section class="chapter">
+<h2 id="c-modelos">Modelos de haz</h2>
+<figure class="wide">
+  <img src="img/modelos.png" alt="Pestaña Modelos de haz con la lista de modelos, los parámetros y las gráficas de espectro y perfil radial">
+  <figcaption>Pestaña Modelos de haz.</figcaption>
+</figure>
+<p>A la izquierda está la lista de modelos de la biblioteca, con su máquina, energía y si están comisionados.</p>
+<ul>
+  <li><b>Default</b>: marca el modelo que se usa por defecto en las verificaciones. Solo puede haber uno; un
+      segundo clic lo desmarca. Si se usan modelos distintos por máquina, deje la casilla vacía y el programa
+      elegirá por máquina, energía y modo de fluencia.</li>
+  <li><b>Nuevo</b>, <b>Duplicar</b>, <b>Importar…</b> y <b>Eliminar</b> gestionan la lista. Para copiar un
+      modelo a otro ordenador, use <b>Importar…</b> con su fichero JSON, o comparta la biblioteca en red.</li>
+</ul>
+<p>A la derecha están los parámetros del modelo seleccionado:</p>
+<ul>
+  <li><b>Identificación</b>: nombre, máquina (igual que <code>TreatmentMachineName</code> en el plan), energía,
+      modo de fluencia y la casilla <b>Comisionado y validado</b>.</li>
+  <li><b>Colimación</b>: transmisión de mandíbulas y, para cada MLC (Millennium 120, HD120), transmisión, DLG y
+      ancho de la zona lengüeta-ranura. Son los valores de la configuración de Eclipse; no se ajustan. Si un plan
+      usa un MLC que no está marcado en el modelo, el cálculo no empieza.</li>
+  <li><b>Fuentes</b>, <b>Espectro y contaminación electrónica</b> y <b>Calibración de UM</b>: parámetros
+      físicos que normalmente fija el comisionado.</li>
+</ul>
+<p><b>Guardar cambios</b> guarda el modelo. Si se ha cambiado un parámetro físico, el modelo se recalibra al
+guardar. <b>Recalibrar</b> repite la calibración de las UM con la rejilla indicada. <b>Informe de comisionado</b>
+abre el informe con el que se creó el modelo.</p>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section class="chapter">
+<h2 id="c-comisionado">Comisionado</h2>
+<figure class="wide short">
+  <img src="img/comisionado.png" alt="Pestaña Comisionado con los apartados de máquina, curvas medidas y factores de campo">
+  <figcaption>Pestaña Comisionado.</figcaption>
+</figure>
+<p>El comisionado ajusta un modelo de haz a las medidas de una máquina. Lee directamente los datos que se
+cargan en Eclipse.</p>
+<ol>
+  <li><b>Máquina y energía.</b> Nombre del modelo, máquina (exactamente como <code>TreatmentMachineName</code>
+      en el plan), energía y modo de fluencia.</li>
+  <li><b>Curvas medidas.</b> <b>Añadir w2CAD…</b> lee los ficheros de los golden beam data de Varian
+      (<code>OPD</code>, <code>OPP</code>, <code>DPR</code>). <b>Añadir CSV…</b> lee curvas de dos columnas
+      (posición o profundidad, valor); se piden el campo, la DFS, la profundidad y el eje. Se recomiendan PDD de
+      3×3, 10×10, 20×20 y 40×40 cm y perfiles X, Y y diagonales a varias profundidades. Las curvas de cuña se
+      descartan. La pestaña <b>Curvas medidas</b> de la derecha las muestra.</li>
+  <li><b>Factores de campo.</b> Tabla 2D de Varian (por ejemplo <code>06X_00.txt</code>) o CSV con columnas
+      <code>campo_x_mm, campo_y_mm, factor</code>, con su DFS, profundidad y campo de referencia.</li>
+  <li><b>Colimación.</b> Transmisión, DLG y ancho lengüeta-ranura de cada MLC, y transmisión de mandíbulas,
+      tal como están en la configuración de Eclipse.</li>
+  <li><b>Calibración de UM.</b> Dosis por UM en las condiciones de referencia (DFS, profundidad, campo).</li>
+  <li><b>Ajuste.</b> Rejilla de cálculo (use la misma que en las verificaciones) y etapas del ajuste.</li>
+</ol>
+<p>Pulse <b>Comisionar</b>. El ajuste tarda entre 15 y 60 minutos según el número de curvas y el ordenador.
+Al terminar, el modelo queda en la biblioteca y la pestaña <b>Resultado</b> muestra la comparación con cada curva;
+<b>Abrir informe de comisionado</b> abre el informe completo y <b>Ver el modelo</b> lo muestra en la pestaña de
+modelos.</p>
+<p><b>Guardar configuración…</b> guarda todo lo introducido para repetir el comisionado más adelante;
+<b>Cargar configuración…</b> lo recupera. Revise el informe de comisionado antes de marcar el modelo como <b>comisionado y validado</b>. Para probar el proceso sin datos reales, use los datos sintéticos de <code>examples\gbd_sintetico</code>.</p>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section class="chapter">
+<h2 id="c-curvas">Curvas HU–densidad</h2>
+<figure class="wide">
+  <img src="img/curvas.png" alt="Pestaña Curvas HU-densidad con la lista de curvas, la tabla de puntos y la gráfica">
+  <figcaption>Pestaña Curvas HU–densidad.</figcaption>
+</figure>
+<p>Cada curva convierte el número CT (HU) en densidad electrónica relativa al agua. Use la curva medida en su CT
+con un maniquí de calibración, la misma que tiene configurada en el planificador.</p>
+<ul>
+  <li><b>Nueva</b>, <b>Importar CSV…</b>, <b>Duplicar</b> y <b>Eliminar</b> gestionan las curvas. El CSV tiene dos
+      columnas con cabecera <code>HU,RED</code> y punto como separador decimal.</li>
+  <li>Doble clic en un punto de la tabla para editarlo; <b>Añadir punto</b> y <b>Quitar punto</b> modifican la
+      tabla. La gráfica se actualiza y, debajo, se indica si la curva es válida. <b>Guardar</b> la guarda.</li>
+  <li><b>Escáneres asociados</b>: al verificar un plan, la curva elegida se asocia al escáner del CT (nombre de la
+      estación, fabricante y modelo) y se propone sola en los planes siguientes. <b>Quitar asociación</b> la
+      elimina.</li>
+</ul>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section class="chapter">
+<h2 id="c-ajustes">Ajustes</h2>
+<figure class="wide">
+  <img src="img/ajustes.png" alt="Pestaña Ajustes con carpetas, opciones de cálculo y superposición en GPU">
+  <figcaption>Pestaña Ajustes.</figcaption>
+</figure>
+<p>Los cambios se aplican al pulsar <b>Guardar ajustes</b>.</p>
+<table class="grid compact">
+  <thead><tr><th style="width:36%">Ajuste</th><th>Significado</th><th style="width:15%">Por defecto</th></tr></thead>
+  <tbody>
+  <tr><td>Biblioteca</td><td>Carpeta de modelos, curvas e informes de comisionado. Puede estar en red.</td><td>Documentos\calcindep</td></tr>
+  <tr><td>Resultados</td><td>Carpeta de las verificaciones. Vacío: subcarpeta <code>resultados</code> de la biblioteca.</td><td>vacío</td></tr>
+  <tr><td>Hilos de cálculo</td><td>Núcleos que usa el cálculo. Use menos si quiere seguir trabajando con el ordenador mientras calcula.</td><td>todos</td></tr>
+  <tr><td>Resolución del mapa de fluencia</td><td>Tamaño de píxel de la fluencia en el plano del isocentro.</td><td>0.5 mm</td></tr>
+  <tr><td>Paso máximo de gantry en arcos</td><td>Los arcos se dividen en incidencias de como máximo este ángulo.</td><td>2°</td></tr>
+  <tr><td>Sector de superposición en arcos</td><td>Las incidencias se agrupan en sectores para la superposición. Con 10° la dosis difiere menos del 0.2% de la obtenida con 3°, con un tiempo unas 3 veces menor.</td><td>10°</td></tr>
+  <tr><td>Margen alrededor del External</td><td>Margen de la región de cálculo.</td><td>20 mm</td></tr>
+  <tr><td>Atenuación del TERMA a través de todo el CT</td><td>Traza los rayos por todo el CT, no solo por la matriz de dosis.</td><td>activado</td></tr>
+  </tbody>
+</table>
+<p>Se recomienda no cambiar las opciones de cálculo una vez validado el sistema.</p>
+
+<h3 class="nonum">Superposición en GPU</h3>
+<p>El desplegable <b>Dispositivo</b> tiene tres opciones:</p>
+<ul>
+  <li><b>Automático</b> (recomendado): usa la GPU solo si ha superado la comprobación de precisión y es al menos
+      1.2 veces más rápida que la CPU. Si hay varias GPU válidas, usa la más rápida.</li>
+  <li><b>Solo CPU</b>.</li>
+  <li><b>Una GPU concreta</b>: se usa si supera la comprobación de precisión, aunque no sea más rápida.</li>
+</ul>
+<p>La comprobación se hace sola la primera vez que se usa una GPU, y de nuevo si cambian el modelo de GPU, el
+driver o el código: se calcula un maniquí de tórax con la GPU y con la CPU, y la GPU se acepta si la diferencia
+máxima es menor del 0.01% de la dosis máxima. <b>Comprobar GPU de nuevo</b> la repite. Si la GPU falla durante un
+cálculo, ese cálculo y los siguientes de la sesión continúan en la CPU y el resultado lleva un aviso. El informe
+indica siempre dónde se hizo la superposición.</p>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section class="chapter">
+<h2 id="c-carpetas">Dónde se guarda cada cosa</h2>
+<table class="grid">
+  <thead><tr><th style="width:42%">Ubicación</th><th>Contenido</th></tr></thead>
+  <tbody>
+  <tr><td>Carpeta del programa (por ejemplo <code>C:\CalcIndep</code>)</td><td>Código, datos de base, este manual. Se puede sustituir al actualizar.</td></tr>
+  <tr><td><code>Documentos\calcindep</code> (biblioteca)</td><td>Modelos, curvas, comisionados y resultados. Es la carpeta que hay que incluir en las copias de seguridad.</td></tr>
+  <tr><td><code>%APPDATA%\calcindep</code></td><td><code>ajustes.json</code>; registro de errores <code>calcindep.log</code>; <code>error_arranque.txt</code> si el programa no pudo arrancar; <code>gpu.json</code> con la comprobación de la GPU.</td></tr>
+  <tr><td>Entorno de Python <code>calcindep</code></td><td>Dentro de la carpeta de Miniforge (<code>…\miniforge3\envs\calcindep</code>).</td></tr>
+  </tbody>
+</table>
+<p>Para abrir <code>%APPDATA%\calcindep</code>: menú <b>Ayuda → Abrir carpeta de ajustes y registro</b>.</p>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section class="chapter">
+<h2 id="c-problemas">Solución de problemas</h2>
+<p>Si el programa da un error, abra <b>Ayuda → Abrir carpeta de ajustes y registro</b> y guarde
+<code>calcindep.log</code> (y <code>error_arranque.txt</code> si existe) para enviarlo junto con la descripción
+del problema.</p>
+
+<dl class="faq">
+<dt>El instalador dice «No se ha encontrado Anaconda ni Miniconda».</dt>
+<dd>Instale Miniforge (paso 1 de la instalación) y ejecute de nuevo <code>instalar_windows.bat</code>. Si conda
+está en una carpeta poco habitual, edite el instalador e indique la carpeta en <code>CONDA_ROOT</code>.</dd>
+
+<dt>Windows muestra «Windows protegió su PC» o no deja ejecutar los .bat.</dt>
+<dd>Pulse <b>Más información → Ejecutar de todas formas</b>. Para evitarlo, desbloquee el ZIP antes de
+descomprimirlo (paso 2). Si la política del hospital bloquea los ficheros <code>.bat</code>, consulte con
+informática.</dd>
+
+<dt>Conda no puede descargar los paquetes (error de conexión, SSL o proxy).</dt>
+<dd>El instalador intenta entonces usar el entorno base con pip. Si tampoco funciona, pida a informática que
+permita el acceso a <code>conda.anaconda.org</code> (conda-forge), <code>pypi.org</code> y
+<code>files.pythonhosted.org</code>, o que le indique el proxy para configurarlo en conda
+(<code>proxy_servers</code> en el fichero <code>.condarc</code>). Después, ejecute de nuevo el instalador.</dd>
+
+<dt>El programa no se abre o se cierra al arrancar.</dt>
+<dd>Si el arranque falla, se muestra el error en una ventana y se guarda en <code>error_arranque.txt</code>. Para
+ver todos los mensajes, ejecute <code>CalcIndep_diagnostico.bat</code> (lo crea el instalador): abre el programa
+con consola y guarda la salida en <code>diagnostico.txt</code>, en la carpeta del programa.</dd>
+
+<dt>La primera vez tarda mucho en abrirse.</dt>
+<dd>Es normal: se compila el motor de cálculo. Las veces siguientes arranca en unos segundos.</dd>
+
+<dt>El acceso directo ya no funciona.</dt>
+<dd>La carpeta del programa se ha movido o renombrado. Ejecute de nuevo <code>instalar_windows.bat</code> desde
+la carpeta nueva.</dd>
+
+<dt>F1 no abre el manual.</dt>
+<dd>Hace falta un visor de PDF instalado. El manual está en <code>docs\Manual_CalcIndep.pdf</code>, dentro de la
+carpeta del programa.</dd>
+
+<dt>«Haces sin modelo de haz» o «— sin modelo —» en la tabla de haces.</dt>
+<dd>No hay ningún modelo de esa energía y modo de fluencia. Haga doble clic en el haz y elija un modelo, o cree
+uno en <b>Comisionado</b>.</dd>
+
+<dt>«El modelo … no tiene parámetros del MLC …».</dt>
+<dd>El plan usa un MLC que el modelo no tiene marcado. En <b>Modelos de haz → Colimación</b>, marque ese MLC,
+introduzca su transmisión, DLG y ancho lengüeta-ranura y pulse <b>Guardar cambios</b>.</dd>
+
+<dt>«Faltan objetos DICOM del plan».</dt>
+<dd>En la carpeta falta el CT, el RTSTRUCT o el RTDOSE del plan elegido, o no están enlazados entre sí. Exporte
+de nuevo los cuatro objetos juntos.</dd>
+
+<dt>«El plan no tiene dosis de prescripción».</dt>
+<dd>Se ha elegido la normalización a la prescripción y el RTPLAN no la incluye. Use la normalización al máximo.</dd>
+
+<dt>El cálculo es lento.</dt>
+<dd>Compruebe en <b>Ajustes</b> que <b>Hilos de cálculo</b> usa todos los núcleos. Si hay GPU, instale la
+superposición en GPU. Una rejilla isótropa de 2.5 o 3 mm es más rápida que una de 1–2 mm.</dd>
+
+<dt>Diferencias grandes en zonas concretas.</dt>
+<dd>Revise la mesa y los objetos de alta densidad (asígneles densidad en <b>Densidades por estructura…</b>),
+que la curva HU–densidad es la del escáner correcto, y los avisos del resumen (cuñas, bloques o MLC no
+modelados).</dd>
+</dl>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section class="chapter">
+<h2 id="c-limitaciones">Limitaciones conocidas</h2>
+<ul>
+  <li><b>Energías:</b> los kernels incluidos llegan a 6 MeV (6X y 6FFF). Para 10X o 15X hay que añadir kernels
+      hasta la energía máxima del espectro.</li>
+  <li><b>Accesorios:</b> sin modelo de cuñas físicas, cuñas dinámicas (EDW), bloques ni conos de radiocirugía. El
+      plan se calcula sin ellos y el informe lo avisa.</li>
+  <li><b>MLC:</b> solo Millennium 120 y HD120; los MLC de doble capa no se admiten. DLG constante, una sola
+      transmisión por MLC y franja lengüeta-ranura de ancho fijo. No se modelan por separado la forma de la punta
+      ni la fuga entre láminas.</li>
+  <li><b>Fuente extrafocal:</b> tiene anchuras distintas en X e Y, pero no modela por separado la posición de cada
+      mandíbula.</li>
+  <li><b>Kernel:</b> no varía con el endurecimiento del espectro en profundidad ni con el ablandamiento fuera de eje.</li>
+  <li><b>Medios:</b> se tratan como agua con densidad electrónica escalada; la dosis calculada es aproximadamente
+      dosis en agua dentro del medio.</li>
+  <li><b>Calibración:</b> depende ligeramente del tamaño de vóxel; el modelo se recalibra solo si la rejilla del plan
+      difiere más de 0.6 mm de la de calibración.</li>
+  <li><b>Modelos antiguos:</b> los modelos guardados antes de algunas opciones (parámetros por MLC, inclinación del
+      kernel, ablandamiento cuadrático) se cargan sin ellas para que calculen igual que cuando se validaron. Para
+      usarlas hay que comisionar de nuevo.</li>
+  <li><b>Validación:</b> las pruebas realizadas comprueban la coherencia interna del programa. La validación frente a
+      medidas y frente al planificador con planes reales debe hacerla cada centro.</li>
+</ul>
+</section>
+
+<!-- ============================ ANEXO A ============================ -->
+<section class="chapter annex">
+<h2 id="a-calculo">Descripción del cálculo</h2>
+<p>Resumen del método para el radiofísico. El <code>README.md</code> del paquete tiene más detalle.</p>
+
+<p><b>Densidades.</b> El CT se convierte a densidad electrónica relativa con la curva HU–RED y se promedia en
+cada vóxel de la rejilla de cálculo (supermuestreo 3×3×3). Fuera del External se asigna aire, salvo las
+estructuras de tipo SUPPORT. Se respetan las densidades asignadas en el RTSTRUCT (<code>REL_ELEC_DENSITY</code>).</p>
+
+<p><b>Fluencia.</b> Para cada par de puntos de control se calcula de forma analítica la fracción de UM durante la
+que cada punto del plano del isocentro está descubierto por mandíbulas y láminas (movimiento lineal entre
+puntos de control). Se incluyen la transmisión del MLC, la DLG, la transmisión de mandíbulas, el efecto
+lengüeta-ranura, el tamaño de la fuente primaria, la fuente extrafocal y el perfil radial de fluencia. Los arcos
+se dividen en incidencias de como máximo 2°. El tipo de MLC se identifica por los límites de las láminas del
+RTPLAN.</p>
+
+<p><b>TERMA.</b> Se calcula para cada incidencia con trazado de rayos divergentes desde la fuente, el espectro del
+modelo (12 energías), el ablandamiento fuera de eje (lineal o cuadrático con el radio) y la ley del inverso del
+cuadrado.</p>
+
+<p><b>Superposición.</b> Collapsed cone (Ahnesjö 1989) con 94 direcciones por incidencia. Los kernels son los de
+EDKnrc agrupados en 13 bandas cenitales y ajustados a dos exponenciales por banda. El transporte en cada cono usa
+la distancia radiológica (escalado por densidad electrónica), que es la corrección de heterogeneidades. En los
+arcos, las incidencias se agrupan en sectores de 10°. En campos de más de unos 16 cm, el kernel se inclina según
+la dirección de los rayos vista desde la fuente, para reproducir la dispersión en los bordes de los campos
+grandes.</p>
+
+<p><b>Contaminación electrónica.</b> Término exponencial con la profundidad radiológica, proporcional a la apertura
+suavizada.</p>
+
+<p><b>Calibración.</b> La dosis se pasa a cGy con el factor obtenido al calcular las condiciones de referencia del
+modelo. Los factores de campo resultan del propio cálculo (dispersión en maniquí por la superposición y en el
+cabezal por la fuente extrafocal).</p>
+
+<p><b>GPU.</b> En la GPU la superposición se hace en simple precisión (fp32), con desarrollos en serie de las
+exponenciales para los pasos cortos. En un VMAT de prueba, la diferencia con la CPU fue como máximo del 0.0011% de
+la dosis máxima en la zona de más del 10%; ningún punto cambió de resultado gamma.</p>
+
+<p><b>Gamma.</b> Low et al. (1998). Para cada punto de la referencia por encima del umbral se busca el mínimo de Γ en
+una red de desplazamientos de paso DTA/10 dentro de un radio de 2×DTA, interpolando trilinealmente la
+distribución evaluada. Se calcula dentro del External y se resume por estructura.</p>
+</section>
+
+<!-- ============================ ANEXO B ============================ -->
+<section class="chapter annex">
+<h2 id="a-cli">Uso desde la línea de comandos</h2>
+<p>No es necesario para el uso habitual. Abra <b>Miniforge Prompt</b>, active el entorno y vaya a la carpeta del
+programa:</p>
+<pre>conda activate calcindep
+cd C:\CalcIndep</pre>
+<table class="grid compact">
+  <thead><tr><th style="width:52%">Orden</th><th>Qué hace</th></tr></thead>
+  <tbody>
+  <tr><td><code>python -m calcindep</code></td><td>Abre la interfaz gráfica.</td></tr>
+  <tr><td><code>python -m calcindep verificar CARPETA --modelo M.json --curva C.csv --gamma 3,2 --umbral 10</code></td><td>Verifica un plan sin interfaz.</td></tr>
+  <tr><td><code>python -m calcindep comisionar CONFIG.json</code></td><td>Comisiona un modelo a partir de una configuración guardada.</td></tr>
+  <tr><td><code>python -m calcindep calibrar MODELO.json</code></td><td>Calibra las UM de un modelo.</td></tr>
+  <tr><td><code>python -m calcindep caso-sintetico CARPETA --tecnica VMAT</code></td><td>Crea un caso DICOM sintético de prueba (3D, IMRT o VMAT).</td></tr>
+  <tr><td><code>python -m calcindep gpu [--comprobar]</code></td><td>Muestra las GPU y su comprobación frente a la CPU.</td></tr>
+  </tbody>
+</table>
+<p><code>--gpu cpu</code> antes de la orden fuerza el cálculo en la CPU. Las configuraciones JSON tienen ejemplos en
+<code>examples\</code>.</p>
+</section>
+
+<!-- ============================ ANEXO C ============================ -->
+<section class="chapter annex">
+<h2 id="a-refs">Referencias</h2>
+<ul class="refs">
+  <li>Ahnesjö A. Collapsed cone convolution of radiant energy for photon dose calculation in heterogeneous media.
+      <i>Med Phys</i> 1989;16:577–592.</li>
+  <li>Mackie TR, Bielajew AF, Rogers DWO, Battista JJ. Generation of photon energy deposition kernels using the EGS
+      Monte Carlo code. <i>Phys Med Biol</i> 1988;33:1–20.</li>
+  <li>Low DA, Harms WB, Mutic S, Purdy JA. A technique for the quantitative evaluation of dose distributions.
+      <i>Med Phys</i> 1998;25:656–661.</li>
+  <li>Kernels EDKnrc: repositorio <i>conehead</i> de S. Peet (licencia MIT). Detalle en
+      <code>data\kernels\edknrc_mono\LEEME.md</code>.</li>
+</ul>
+</section>
+
+</body>
+</html>

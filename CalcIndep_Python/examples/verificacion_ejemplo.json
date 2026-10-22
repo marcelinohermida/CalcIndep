@@ -1,0 +1,26 @@
+{
+  "beam_models": ["../data/beam_models/generico_6X.json"],
+  "hu_ed_csv": "../data/hu_ed/curva_ejemplo.csv",
+  "gamma": {
+    "dose_pct": 3.0,
+    "dta_mm": 2.0,
+    "local": false,
+    "threshold_pct": 10.0,
+    "normalization": "max",
+    "max_gamma": 2.0,
+    "interp_fraction": 10,
+    "reference": "tps"
+  },
+  "options": {
+    "fluence_res_mm": 0.5,
+    "max_gantry_step_deg": 2.0,
+    "sector_deg": 10.0,
+    "outside_external": "air",
+    "keep_support_structures": true,
+    "apply_structure_overrides": true
+  },
+  "pass_threshold_pct": 95.0,
+  "calc_spacing_mm": null,
+  "fraction_factor": null,
+  "save_rtdose": true
+}

@@ -1,0 +1,27 @@
+{
+  "machine": "TB_PRUEBA",
+  "energy": "6X",
+  "fluence_mode": "STANDARD",
+  "measured": {
+    "w2cad": [
+      "gbd_6X.asc"
+    ],
+    "output_factors": {
+      "file": "factores_campo.csv",
+      "ssd_mm": 950,
+      "depth_mm": 50,
+      "ref_field_mm": 100
+    }
+  },
+  "mlc_transmission": 0.013,
+  "mlc_dlg_mm": 1.3,
+  "calibration": {
+    "dose_per_mu_cgy": 1.0,
+    "ssd_mm": 1000,
+    "depth_mm": 15,
+    "field_mm": 100
+  },
+  "grid_mm": 2.5,
+  "output_model": "modelo_TB_PRUEBA_6X.json",
+  "report": "informe_comisionado.html"
+}

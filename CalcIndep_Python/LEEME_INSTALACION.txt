@@ -1,0 +1,44 @@
+CalcIndep 1.0 - Calculo independiente de dosis para radioterapia externa
+==========================================================================
+
+INSTALACION (Windows 10 u 11, unos 15-20 minutos)
+
+1. Si el ordenador no tiene Miniforge, Miniconda ni Anaconda:
+   descargue Miniforge para Windows desde https://conda-forge.org/download
+   e instalelo con las opciones por defecto ("Just Me", sin permisos de
+   administrador).
+
+2. Descargue el ZIP desde GitHub (boton Code > Download ZIP).
+   Antes de descomprimirlo: clic derecho > Propiedades > marque
+   "Desbloquear" (si aparece) > Aceptar.
+   Descomprima el ZIP en una carpeta fija y sin tildes en la ruta,
+   por ejemplo C:\CalcIndep o Documentos\CalcIndep.
+
+3. Haga doble clic en instalar_windows.bat.
+   Si Windows muestra "Windows protegio su PC", pulse
+   "Mas informacion" > "Ejecutar de todas formas".
+   Necesita conexion a internet. Espere a que diga "Instalacion terminada".
+
+4. Abra CalcIndep con el acceso directo del escritorio.
+   La primera vez tarda uno o dos minutos en arrancar.
+
+OPCIONAL: si el ordenador tiene tarjeta grafica, ejecute instalar_gpu.bat
+para hacer la superposicion en la GPU (calculo mas rapido, misma dosis).
+
+MANUAL: docs\Manual_CalcIndep.pdf. Dentro del programa: menu Ayuda o tecla F1.
+DOCUMENTACION TECNICA: README.md (espanol) y README.en.md (ingles).
+LICENCIA: LICENSE (MIT) y THIRD_PARTY_NOTICES.txt.
+
+SI ALGO FALLA: ejecute CalcIndep_diagnostico.bat (lo crea el instalador en
+la carpeta del programa) y consulte el capitulo "Solucion de problemas" del
+manual.
+
+ACTUALIZAR: descomprima la version nueva en la misma carpeta y ejecute de
+nuevo instalar_windows.bat. Los modelos, curvas, resultados y ajustes se
+conservan (estan en Documentos\calcindep y en %APPDATA%\calcindep).
+
+AVISO: CalcIndep es una herramienta de desarrollo propio y no es un
+producto sanitario certificado. Antes de usarla en clinica hay que
+comisionar el modelo de haz de cada maquina y energia, cargar la curva
+HU-densidad del CT y validar el conjunto frente a medidas y frente al
+planificador.

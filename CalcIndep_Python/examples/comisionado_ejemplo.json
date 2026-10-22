@@ -1,0 +1,25 @@
+{
+  "machine": "TrueBeam1",
+  "energy": "6X",
+  "fluence_mode": "STANDARD",
+  "name": "TrueBeam1 6X",
+  "measured": {
+    "w2cad": ["gbd/6X_PDD.asc", "gbd/6X_perfiles.asc"],
+    "pdd": [
+      {"file": "medidas/pdd_10x10.csv", "field_mm": 100, "ssd_mm": 1000, "units": "mm"}
+    ],
+    "profiles": [
+      {"file": "medidas/perfil_10x10_d100_X.csv", "field_mm": 100, "ssd_mm": 1000, "depth_mm": 100, "axis": "X", "units": "mm"}
+    ],
+    "output_factors": {"file": "gbd/factores_campo.csv", "ssd_mm": 950, "depth_mm": 50, "ref_field_mm": 100}
+  },
+  "mlc_transmission": 0.013,
+  "mlc_dlg_mm": 1.3,
+  "jaw_transmission": 0.001,
+  "calibration": {"dose_per_mu_cgy": 1.0, "ssd_mm": 1000, "depth_mm": 15, "field_mm": 100},
+  "grid_mm": 2.5,
+  "reference_field_mm": 100,
+  "steps": {"spectrum": true, "econt": true, "horns": true, "softening": true, "source": true, "output_factors": true},
+  "output_model": "modelo_TrueBeam1_6X.json",
+  "report": "informe_comisionado_TrueBeam1_6X.html"
+}

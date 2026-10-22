@@ -1,0 +1,106 @@
+@page {
+  size: A4;
+  margin: 22mm 20mm 22mm 20mm;
+  @bottom-left { content: "CalcIndep 1.0 · Manual de usuario"; font: 8pt Inter; color: #7a8496; }
+  @bottom-right { content: counter(page); font: 600 8.5pt Inter; color: #1f3b5a; }
+  @top-right { content: string(chap); font: 8pt Inter; color: #7a8496; }
+}
+@page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } @top-right { content: none; } }
+@page toc { @top-right { content: none; } }
+
+:root { --ink:#1d2433; --muted:#5b6475; --accent:#1f3b5a; --accent2:#2f6690; --line:#d9dee7; --soft:#f3f5f8; }
+html { font-family: Inter, "DejaVu Sans", sans-serif; font-size: 9.6pt; line-height: 1.5; color: var(--ink); }
+body { margin: 0; counter-reset: chap figure; }
+p { margin: 0 0 6pt; text-align: left; hyphens: auto; }
+b { font-weight: 600; }
+a { color: var(--accent2); text-decoration: none; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.2pt; background: var(--soft); padding: 0 2pt; border-radius: 2pt; }
+pre { font-family: "DejaVu Sans Mono", monospace; font-size: 8.4pt; background: var(--soft); border-left: 3pt solid var(--accent2); padding: 6pt 9pt; margin: 4pt 0 8pt; }
+ul, ol { margin: 0 0 7pt; padding-left: 15pt; }
+li { margin: 0 0 2.5pt; }
+.url { font-weight: 600; color: var(--accent2); }
+.key { display: inline-block; border: 0.8pt solid #9aa3b2; border-bottom-width: 1.6pt; border-radius: 3pt; padding: 0 4pt; font: 600 8pt Inter; background: #fff; }
+
+/* ---------- Portada ---------- */
+.cover { page: first; height: 297mm; position: relative; break-after: page; background: #fff; }
+.cover-band { position: absolute; top: 0; left: 0; right: 0; height: 118mm; background: var(--accent); }
+.cover-body { position: absolute; top: 52mm; left: 24mm; right: 24mm; color: #fff; }
+.cover-kicker { font-size: 11pt; letter-spacing: 2.5pt; text-transform: uppercase; color: #b9cde2; margin-bottom: 6mm; }
+.cover-title { font-size: 46pt; font-weight: 700; margin: 0; letter-spacing: -0.5pt; line-height: 1; color: #fff; }
+.cover-sub { font-size: 14pt; margin-top: 5mm; color: #e3ecf5; max-width: 140mm; line-height: 1.35; }
+.cover-meta { position: absolute; top: 80mm; font-size: 10.5pt; color: var(--accent); font-weight: 600;  }
+.cover-body .cover-meta { position: static; margin-top: 52mm; color: var(--accent); }
+.cover-note { position: absolute; left: 24mm; right: 24mm; bottom: 26mm; font-size: 9pt; color: var(--muted);
+  border-top: 1pt solid var(--line); padding-top: 5mm; line-height: 1.5; }
+.cover-note strong { color: var(--ink); }
+
+/* ---------- Índice ---------- */
+.toc-page { page: toc; break-after: page; }
+h2.nonum { font-size: 20pt; color: var(--accent); margin: 0 0 10mm; border: none; }
+h2.nonum::before { content: none; }
+.toc { list-style: none; padding: 0; margin: 0; }
+.toc li { margin: 0; }
+.toc li a { color: var(--ink); display: block; }
+.toc li a::before { content: target-counter(attr(href), chap) ".  " target-text(attr(href)); }
+.toc li a::after { content: leader(dotted) " " target-counter(attr(href), page); color: var(--muted); }
+.toc li.l1 { font-weight: 600; font-size: 10.5pt; margin-top: 7pt; }
+.toc li.l2 { padding-left: 16pt; font-size: 9.4pt; margin-top: 2pt; }
+.toc li.l2 a::before { content: target-counter(attr(href), chap) "." target-counter(attr(href), sec) "  " target-text(attr(href)); }
+.toc li.l1.annex a::before { content: "Anexo " target-counter(attr(href), annexn, upper-alpha) ".  " target-text(attr(href)); }
+
+/* ---------- Capítulos ---------- */
+.chapter { break-before: page; counter-reset: sec; }
+.chapter:not(.annex) { counter-increment: chap; }
+.annex { counter-increment: annexn; }
+h2 { string-set: chap content(text); font-size: 19pt; font-weight: 700; color: var(--accent); margin: 0 0 9pt;
+  padding-bottom: 6pt; border-bottom: 1.5pt solid var(--accent); }
+.chapter:not(.annex) > h2::before { content: counter(chap); display: inline-block; min-width: 13mm; color: var(--accent2); }
+.annex > h2::before { content: "Anexo " counter(annexn, upper-alpha) " · "; color: var(--accent2); }
+h3 { font-size: 12.5pt; font-weight: 700; color: var(--accent); margin: 15pt 0 5pt; break-after: avoid; counter-increment: sec; }
+.chapter:not(.annex) h3:not(.nonum)::before { content: counter(chap) "." counter(sec) "  "; color: var(--accent2); }
+h3.nonum { counter-increment: none; }
+h4 { font-size: 10.5pt; margin: 0 0 4pt; color: var(--ink); }
+
+/* ---------- Tablas ---------- */
+table { width: 100%; border-collapse: collapse; margin: 4pt 0 10pt; font-size: 8.9pt; break-inside: auto; }
+tr { break-inside: avoid; }
+th, td { text-align: left; vertical-align: top; padding: 4pt 6pt; }
+table.grid thead th { background: var(--accent); color: #fff; font-weight: 600; }
+table.grid td { border-bottom: 0.6pt solid var(--line); }
+table.grid tbody tr:nth-child(even) td { background: #f8f9fb; }
+table.compact td, table.compact th { padding: 3pt 6pt; }
+table.kv th { width: 24%; color: var(--accent); font-weight: 600; border-bottom: 0.6pt solid var(--line); }
+table.kv td { border-bottom: 0.6pt solid var(--line); }
+
+/* ---------- Figuras ---------- */
+figure { margin: 6pt 0 12pt; break-inside: avoid; text-align: center; }
+figure img { max-width: 100%; border: 0.6pt solid #c3cad6; box-shadow: 0 1pt 3pt rgba(0,0,0,.08); }
+figure.mid img { width: 78%; }
+figcaption { counter-increment: figure; font-size: 8.4pt; color: var(--muted); margin-top: 4pt; text-align: center; }
+figcaption::before { content: "Figura " counter(figure) ". "; font-weight: 600; color: var(--ink); }
+.side { display: flex; gap: 9mm; align-items: flex-start; margin-bottom: 6pt; }
+.side figure.tall { flex: 0 0 62mm; margin: 0; }
+.side figure.tall img { width: 62mm; }
+.sidetext { flex: 1; }
+
+/* ---------- Bloques ---------- */
+.flow { display: flex; align-items: stretch; gap: 2mm; margin: 8pt 0 12pt; }
+.flow .step { flex: 1; background: var(--soft); border-top: 2.5pt solid var(--accent2); padding: 6pt 7pt; font-size: 8.4pt; line-height: 1.35; }
+.flow .step b { display: block; color: var(--accent); font-size: 9.6pt; margin-bottom: 2pt; }
+.flow .arrow { align-self: center; color: var(--accent2); font-size: 12pt; }
+.numstep { display: flex; gap: 6mm; margin: 8pt 0 10pt; break-inside: avoid; }
+.numstep .n { flex: 0 0 9mm; height: 9mm; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700;
+  font-size: 12pt; text-align: center; line-height: 9mm; }
+.numstep .b { flex: 1; }
+.note { background: #f4f7fb; border-left: 2.5pt solid #9fb6cf; padding: 5pt 8pt; font-size: 8.8pt; color: #344055; }
+.callout { background: #fff8e6; border-left: 3pt solid #c58a00; padding: 7pt 10pt; margin: 6pt 0 10pt; font-size: 9.2pt; break-inside: avoid; }
+ol.check { list-style: none; padding-left: 0; }
+ol.check li { padding-left: 16pt; position: relative; margin-bottom: 4pt; }
+ol.check li::before { content: "☐"; position: absolute; left: 0; top: -1pt; color: var(--accent2); font-family: "DejaVu Sans"; font-size: 11pt; }
+dl.faq dt { font-weight: 600; color: var(--accent); margin-top: 9pt; break-after: avoid; }
+dl.faq dd { margin: 2pt 0 0 0; padding-left: 10pt; border-left: 1.5pt solid var(--line); }
+ul.refs li { margin-bottom: 5pt; }
+a.xref::before { content: "«" target-text(attr(href)) "» (pág. " target-counter(attr(href), page) ")"; }
+figure.wide img { max-height: 112mm; width: auto; }
+figure.mid img { max-height: 95mm; width: auto; }
+figure.wide.short img { max-height: 84mm; }
