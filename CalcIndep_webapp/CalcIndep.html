@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalcIndep · Cálculo independiente de dosis</title>
+<link rel="stylesheet" href="css/calcindep.css">
+</head>
+<body>
+<div id="app">
+  <div style="padding:40px;font-family:Segoe UI,Arial,sans-serif">
+    <h2>CalcIndep</h2>
+    <p id="ci-carga">Cargando el programa…</p>
+    <noscript><p>Este programa necesita JavaScript.</p></noscript>
+  </div>
+</div>
+<script>
+  // Comprobación de compatibilidad antes de cargar el resto (Chrome 80+, Edge 80+, Firefox 90+).
+  (function () {
+    var falta = [];
+    try { new Function("class A { #x = 1; static y = 2; }; let a = 1 ?? 2; let b = ({})?.c; return 1n;"); } catch (e) { falta.push("JavaScript moderno (ES2020)"); }
+    if (typeof Worker === "undefined") falta.push("Web Workers");
+    if (typeof indexedDB === "undefined") falta.push("IndexedDB");
+    if (typeof MessageChannel === "undefined") falta.push("MessageChannel");
+    if (typeof Blob === "undefined" || typeof URL === "undefined" || !URL.createObjectURL) falta.push("Blob/URL");
+    if (falta.length) {
+      window.CI_INCOMPATIBLE = true;
+      document.getElementById("ci-carga").innerHTML = "Este navegador no es compatible con CalcIndep (falta: " + falta.join(", ") +
+        ").<br>Use Chrome 109 o posterior, Edge o Firefox 115 o posterior.";
+    }
+  })();
+</script>
+<script src="js/datos.js"></script>
+<script src="js/motor/m00_numerico.js"></script>
+<script src="js/motor/m01_fisica.js"></script>
+<script src="js/motor/m02_geometria.js"></script>
+<script src="js/motor/m03_kernels.js"></script>
+<script src="js/motor/m04_plan.js"></script>
+<script src="js/motor/m05_fluencia.js"></script>
+<script src="js/motor/m06_terma.js"></script>
+<script src="js/motor/m07_ccc.js"></script>
+<script src="js/motor/m08_motor.js"></script>
+<script src="js/motor/m09_dicom.js"></script>
+<script src="js/motor/m10_gamma.js"></script>
+<script src="js/motor/m11_verificacion.js"></script>
+<script src="js/motor/m12_gpu.js"></script>
+<script src="js/motor/m13_comisionado.js"></script>
+<script src="js/hilos.js"></script>
+<script src="js/ui/cmaps.js"></script>
+<script src="js/ui/graficos.js"></script>
+<script src="js/ui/comun.js"></script>
+<script src="js/ui/almacen.js"></script>
+<script src="js/ui/informe.js"></script>
+<script src="js/ui/visor.js"></script>
+<script src="js/ui/app.js"></script>
+<script src="js/ui/t_verificar.js"></script>
+<script src="js/ui/t_modelos.js"></script>
+<script src="js/ui/t_comisionado.js"></script>
+<script src="js/ui/t_curvas.js"></script>
+<script src="js/ui/t_ajustes.js"></script>
+<script src="js/ui/dialogos.js"></script>
+<script>
+  if (!window.CI_INCOMPATIBLE) {
+    if (typeof CIApp === "undefined") {
+      document.getElementById("ci-carga").textContent = "No se han podido cargar los ficheros del programa. Compruebe que la carpeta «js» está junto a CalcIndep.html.";
+    } else {
+      CIApp.start().catch(function (e) { console.error(e); alert("Error al iniciar CalcIndep: " + (e && e.message || e)); });
+    }
+  }
+</script>
+</body>
+</html>

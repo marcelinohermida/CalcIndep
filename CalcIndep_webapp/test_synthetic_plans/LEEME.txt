@@ -1,0 +1,30 @@
+﻿Casos de prueba (DICOM sintéticos, no son pacientes)
+====================================================
+
+Sirven para comprobar la versión web en cada ordenador y navegador. Los
+resultados esperados se han calculado con la versión de escritorio (Python)
+con las mismas opciones. Los dos casos usan el modelo de haz incluido en el
+programa, «Genérico 6X» (sin comisionar), y la curva curva_ejemplo.csv.
+
+1. caso_3D_Millennium120 (4 campos estáticos, unos 20 s a 2 min)
+   - Modelo: Genérico 6X; curva: curva_ejemplo.csv
+   - Rejilla: vóxel isótropo de 3 mm
+   - Gamma: 3 %, 2 mm, Local, umbral 10 %, normalización al máximo,
+     referencia «Cálculo independiente», aprobado con 95 %
+   - Resultado esperado: CUMPLE, 99.9 % de 157940 puntos con γ ≤ 1,
+     γ medio 0.15, γ p95 0.32, γ máx. 1.60
+
+2. caso_VMAT_Millennium120 (2 arcos, de 2 a 15 minutos según el ordenador)
+   - Modelo: Genérico 6X en los dos arcos; curva: curva_ejemplo.csv
+   - Rejilla: la misma que la dosis del TPS
+   - Gamma: 3 %, 3 mm, Global, umbral 10 %, normalización al máximo,
+     referencia «Dosis del TPS», aprobado con 95 %
+   - Resultado esperado: CUMPLE, 100.0 % de 182970 puntos con γ ≤ 1,
+     γ medio 0.01, γ p95 0.02, γ máx. 0.03
+   - La dosis «TPS» de este caso se calculó con el mismo modelo; por eso la
+     gamma es casi nula y cualquier diferencia de cálculo se notaría.
+
+El programa avisa de que el modelo no está comisionado; es lo esperado.
+Con la GPU, los valores pueden diferir en la última cifra decimal (la GPU
+calcula en simple precisión); el porcentaje de puntos que cumplen debe ser el
+mismo.

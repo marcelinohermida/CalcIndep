@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual de CalcIndep (versión web)</title>
+<style>
+  :root { --fg: #1d2433; --muted: #5b6475; --line: #d9dee7; --soft: #f4f6f9; --accent: #1f5fa8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, Roboto, Arial, sans-serif; font-size: 15px; line-height: 1.55; color: var(--fg); background: #eef1f5; }
+  .wrap { display: flex; max-width: 1280px; margin: 0 auto; }
+  nav { width: 260px; flex: none; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 18px 14px; font-size: 13.5px; background: #fff; border-right: 1px solid var(--line); }
+  nav a { display: block; color: var(--fg); text-decoration: none; padding: 2px 6px; border-radius: 4px; }
+  nav a:hover { background: var(--soft); }
+  nav a.l2 { padding-left: 20px; color: var(--muted); }
+  nav .t { font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+  main { flex: 1; min-width: 0; padding: 26px 40px 80px; background: #fff; }
+  h1 { font-size: 28px; margin: 0 0 4px; color: #1f3b5a; }
+  h2 { font-size: 22px; margin: 42px 0 10px; padding-bottom: 4px; border-bottom: 2px solid var(--accent); color: #1f3b5a; }
+  h3 { font-size: 17px; margin: 26px 0 6px; }
+  .sub { color: var(--muted); margin-bottom: 18px; }
+  .aviso { background: #fff4d6; border: 1px solid #e6cf8a; border-radius: 6px; padding: 10px 14px; }
+  .callout { background: #eaf2fb; border-left: 4px solid var(--accent); padding: 10px 14px; margin: 12px 0; }
+  .note { color: var(--muted); font-size: 14px; }
+  code { font-family: Consolas, Menlo, monospace; font-size: 13.5px; background: var(--soft); padding: 1px 4px; border-radius: 3px; }
+  .key { border: 1px solid #b8c0cc; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 13px; background: #fafbfc; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 14px; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 5px 9px; text-align: left; vertical-align: top; }
+  th { background: var(--soft); }
+  figure { margin: 14px 0 18px; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .flow { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; margin: 14px 0; }
+  .flow .step { flex: 1 1 160px; background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .flow .step b { display: block; color: var(--accent); }
+  .flow .step span { font-size: 13.5px; color: var(--muted); }
+  dt { font-weight: 600; margin-top: 12px; }
+  dd { margin: 3px 0 0 18px; }
+  @media (max-width: 860px) { nav { display: none; } main { padding: 18px; } }
+  @media print { nav { display: none; } body { background: #fff; } main { padding: 0; } h2 { page-break-before: always; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <div class="t">CalcIndep · versión web</div>
+  <a href="#que-es">1. Qué es CalcIndep</a>
+  <a href="#puesta">2. Puesta en marcha</a>
+  <a class="l2" href="#requisitos">Requisitos</a>
+  <a class="l2" href="#contenido">Contenido de la carpeta</a>
+  <a class="l2" href="#abrir">Abrir el programa</a>
+  <a class="l2" href="#datos">Dónde se guardan los datos</a>
+  <a class="l2" href="#escritorio">Relación con la versión de escritorio</a>
+  <a href="#primeros">3. Primeros pasos</a>
+  <a class="l2" href="#ventana">La ventana principal</a>
+  <a class="l2" href="#antes">Antes de verificar planes clínicos</a>
+  <a href="#verificar">4. Verificar un plan</a>
+  <a class="l2" href="#exportar">Exportar el plan</a>
+  <a class="l2" href="#pasos">Pasos</a>
+  <a class="l2" href="#resultado">Resultado</a>
+  <a class="l2" href="#visor">Visor de dosis y DVH</a>
+  <a class="l2" href="#ficheros">Ficheros de cada verificación</a>
+  <a href="#modelos">5. Modelos de haz</a>
+  <a href="#comisionado">6. Comisionado</a>
+  <a href="#curvas">7. Curvas HU–densidad</a>
+  <a href="#ajustes">8. Ajustes</a>
+  <a class="l2" href="#gpu">Superposición en GPU</a>
+  <a href="#problemas">9. Solución de problemas</a>
+  <a href="#limitaciones">10. Limitaciones conocidas</a>
+  <a href="#calculo">Anexo A. Descripción del cálculo</a>
+  <a href="#web">Anexo B. Diferencias con la versión de escritorio</a>
+  <a href="#refs">Anexo C. Referencias</a>
+</nav>
+<main>
+<h1>CalcIndep · Manual de usuario</h1>
+<div class="sub">Cálculo independiente de dosis para radioterapia externa con fotones · versión web 1.0 · octubre de 2026</div>
+<div class="aviso"><b>Aviso.</b> CalcIndep es una herramienta de desarrollo propio y no es un producto sanitario certificado.
+Antes de usarla en clínica, cada centro debe comisionar los modelos de haz de sus máquinas, cargar la curva HU–densidad de su
+CT y validar el conjunto frente a medidas y frente a su planificador. El resultado de una verificación no sustituye el juicio
+del radiofísico.</div>
+
+<!-- =================================================================== 1 -->
+<h2 id="que-es">1. Qué es CalcIndep</h2>
+<p>CalcIndep recalcula la dosis de un plan de radioterapia externa con fotones de forma independiente del planificador y
+compara las dos distribuciones. Sirve como control de calidad específico del paciente antes del tratamiento.</p>
+<div class="flow">
+  <div class="step"><b>1. Importa</b><span>CT, RTSTRUCT, RTPLAN y RTDOSE exportados del planificador</span></div>
+  <div class="step"><b>2. Recalcula</b><span>Convolución-superposición collapsed cone con corrección de heterogeneidades</span></div>
+  <div class="step"><b>3. Compara</b><span>Índice gamma 3D y diferencias de HDV en cada estructura</span></div>
+  <div class="step"><b>4. Documenta</b><span>Informe HTML, RTDOSE calculado y resumen en JSON</span></div>
+</div>
+<p>Admite 3D-CRT, IMRT (step-and-shoot y ventana deslizante) y VMAT con los MLC Millennium 120 y HD120 de Varian.</p>
+<p>Esta es la versión para navegador. Usa los mismos algoritmos que la versión de escritorio (programada en Python), escritos
+en JavaScript, y produce los mismos resultados: en los casos de prueba, la dosis calculada difiere de la de la versión de
+escritorio en menos del 0.001% de la dosis máxima y el resultado gamma es idéntico (anexo B).</p>
+<h3>Qué no hace</h3>
+<ul>
+  <li>No modela cuñas físicas, cuñas dinámicas (EDW), bloques ni conos de radiocirugía. Si el plan los tiene, el cálculo se
+      hace sin ellos y el informe lo avisa.</li>
+  <li>Los kernels incluidos llegan a 6 MeV: sirven para 6X y 6FFF.</li>
+  <li>No tiene la certificación de producto sanitario. La responsabilidad de su validación y de su uso es del centro que lo emplea.</li>
+</ul>
+
+<!-- =================================================================== 2 -->
+<h2 id="puesta">2. Puesta en marcha</h2>
+<h3 id="requisitos">Requisitos</h3>
+<table>
+  <tr><th style="width:24%">Navegador</th><td>Google Chrome 109 o posterior, Microsoft Edge 109 o posterior, o Mozilla Firefox 115 o
+      posterior. En Windows 7 sirven las últimas versiones publicadas para ese sistema: Chrome 109 y Firefox 115 ESR.</td></tr>
+  <tr><th>Sistema</th><td>Windows 7, 10 u 11 (o cualquier sistema con uno de los navegadores anteriores).</td></tr>
+  <tr><th>Instalación</th><td>Ninguna. No hace falta conexión a internet ni permisos de administrador. Los datos no salen del ordenador.</td></tr>
+  <tr><th>Memoria</th><td>Se recomiendan 8 GB de RAM. Un plan VMAT con matriz de dosis de 2.5 mm usa unos 1–2 GB en el navegador.</td></tr>
+  <tr><th>GPU</th><td>Opcional. Si el navegador tiene WebGPU (Chrome o Edge 113 o posterior en Windows 10/11) y la tarjeta
+      gráfica supera la comprobación de precisión, la superposición se hace en la GPU (apartado <a href="#gpu">Superposición en GPU</a>).
+      En Windows 7 el cálculo se hace siempre en la CPU. Las versiones recientes de Firefox también tienen WebGPU, pero en las
+      pruebas fue más lento que la CPU (en un portátil con Intel gen-9, 0.6 veces la velocidad de la CPU frente a 11.5 veces
+      en Chrome); el modo automático lo detecta y calcula en la CPU. Para usar la GPU, use Chrome o Edge.</td></tr>
+</table>
+
+<h3 id="contenido">Contenido de la carpeta</h3>
+<table>
+  <tr><th style="width:30%">Fichero o carpeta</th><th>Para qué sirve</th></tr>
+  <tr><td><code>CalcIndep.html</code></td><td>El programa. Se abre con doble clic.</td></tr>
+  <tr><td><code>js\</code></td><td>Código del programa, kernels EDKnrc, modelo genérico 6X y curvas de ejemplo (<code>js\datos.js</code>).</td></tr>
+  <tr><td><code>css\</code></td><td>Estilos de la interfaz.</td></tr>
+  <tr><td><code>manual\</code></td><td>Este manual (tecla <span class="key">F1</span>).</td></tr>
+  <tr><td><code>test_synthetic_plans\</code></td><td>Dos planes sintéticos (3D y VMAT) con los resultados esperados, para comprobar el programa en cada ordenador.</td></tr>
+  <tr><td><code>README.md</code>, <code>README.en.md</code></td><td>Descripción del programa, en español y en inglés.</td></tr>
+  <tr><td><code>LICENSE</code>, <code>THIRD_PARTY_NOTICES.txt</code></td><td>Licencia del programa (MIT) y licencias de los componentes de terceros.</td></tr>
+</table>
+<p>Las carpetas <code>js</code>, <code>css</code> y <code>manual</code> tienen que estar junto a <code>CalcIndep.html</code>. La carpeta
+puede copiarse a cualquier sitio: el disco local, una memoria USB o una carpeta de red.</p>
+
+<h3 id="abrir">Abrir el programa</h3>
+<ol>
+  <li>Copie la carpeta del programa al ordenador o a una carpeta de red.</li>
+  <li>Haga doble clic en <code>CalcIndep.html</code>. Se abre en el navegador predeterminado. Para usar otro navegador, haga clic
+      derecho → <b>Abrir con</b>, o arrastre el fichero a una ventana del navegador.</li>
+  <li>En la barra inferior se lee «Preparando el motor de cálculo…» y, en unos segundos, «Motor de cálculo listo · superposición
+      en CPU» (o en GPU).</li>
+</ol>
+<p>Puede crear un acceso directo al fichero en el escritorio o guardarlo en los marcadores del navegador. La primera vez se crea
+la biblioteca con el modelo genérico 6X y la curva de ejemplo.</p>
+<p class="note">El navegador puede pedir confirmación al cerrar la pestaña si hay un cálculo en curso. Si cierra la pestaña, el
+cálculo se pierde.</p>
+
+<h3 id="datos">Dónde se guardan los datos</h3>
+<p>Los modelos de haz, las curvas HU–densidad, los comisionados y los resultados forman la <b>biblioteca</b>. Hay dos opciones
+(pestaña <b>Ajustes</b>):</p>
+<table>
+  <tr><th style="width:24%">Opción</th><th>Descripción</th></tr>
+  <tr><td><b>En el navegador</b> (por defecto)</td><td>Los datos se guardan en el almacenamiento interno del navegador, en ese
+      ordenador y para ese usuario de Windows. Funciona en todos los navegadores. Chrome y Firefox tienen almacenamientos separados.
+      Si se borran los datos de navegación («cookies y otros datos de sitios»), se borra la biblioteca: guarde copias con
+      <b>Archivo → Exportar la biblioteca (ZIP)</b>. Los resultados se pueden descargar con <b>Archivo → Resultados guardados</b>.</td></tr>
+  <tr><td><b>En una carpeta del disco o de la red</b></td><td>Solo en Chrome y Edge. Los ficheros se escriben en la carpeta
+      elegida con la misma estructura que la versión de escritorio (<code>modelos</code>, <code>curvas_hu</code>,
+      <code>comisionado</code>, <code>resultados</code>). En una carpeta compartida, todo el servicio usa los mismos modelos y
+      curvas. Al abrir el programa, el navegador pide permiso para usar la carpeta: pulse <b>Dar permiso</b> en la franja
+      amarilla superior.</td></tr>
+</table>
+<p>Los ajustes (opciones de cálculo, criterio gamma, asociación de curvas y escáneres, resultado de la comprobación de la GPU) se
+guardan en el navegador de cada ordenador.</p>
+
+<h3 id="escritorio">Relación con la versión de escritorio</h3>
+<ul>
+  <li>Los modelos de haz (JSON), las curvas (CSV) y las configuraciones de comisionado son los mismos ficheros en las dos
+      versiones. La carpeta <code>Documentos\calcindep</code> de la versión de escritorio puede usarse como biblioteca de la
+      versión web (en Chrome o Edge), o importarse en ZIP.</li>
+  <li>Los resultados (<code>resumen.json</code>, RTDOSE, informe HTML) tienen el mismo formato. El campo <code>version</code>
+      de <code>resumen.json</code> indica <code>1.0-web</code>.</li>
+</ul>
+
+<!-- =================================================================== 3 -->
+<h2 id="primeros">3. Primeros pasos</h2>
+<h3 id="ventana">La ventana principal</h3>
+<figure><img src="img/inicio.png" alt="Ventana principal"><figcaption>Ventana principal al abrir el programa.</figcaption></figure>
+<table>
+  <tr><th style="width:26%">Pestaña</th><th>Para qué sirve</th></tr>
+  <tr><td><b>Verificar plan</b></td><td>Calcular un plan y compararlo con la dosis del planificador. Es la que se usa a diario.</td></tr>
+  <tr><td><b>Modelos de haz</b></td><td>Revisar, editar, importar y elegir el modelo por defecto.</td></tr>
+  <tr><td><b>Comisionado</b></td><td>Crear un modelo de haz a partir de las medidas de la máquina.</td></tr>
+  <tr><td><b>Curvas HU–densidad</b></td><td>Crear y editar curvas y asociarlas a los escáneres CT.</td></tr>
+  <tr><td><b>Ajustes</b></td><td>Biblioteca, opciones de cálculo y uso de la GPU.</td></tr>
+</table>
+<p><b>Menú Archivo:</b> ver y descargar los ficheros de la biblioteca y los resultados guardados, y exportar o importar la
+biblioteca completa en un ZIP (para copias de seguridad o para pasarla a otro ordenador o navegador).<br>
+<b>Menú Ayuda:</b> este manual (tecla <span class="key">F1</span>), los ajustes y el registro de errores (para enviarlos si hay
+un problema) y <b>Acerca de CalcIndep</b>, con la versión.</p>
+<p>La barra inferior muestra el estado del motor de cálculo y el dispositivo que hace la superposición (CPU o GPU).</p>
+
+<h3 id="antes">Antes de verificar planes clínicos</h3>
+<p>El modelo genérico 6X y la curva de ejemplo solo sirven para probar el programa. Antes del uso clínico:</p>
+<ol>
+  <li><b>Curva HU–densidad</b> de cada CT de simulación (capítulo <a href="#curvas">7</a>).</li>
+  <li><b>Modelo de haz comisionado</b> para cada máquina, energía y modo de fluencia (capítulo <a href="#comisionado">6</a>), con
+      los parámetros de cada MLC que use la máquina. Si ya tiene modelos comisionados con la versión de escritorio, impórtelos.</li>
+  <li><b>Validación</b> del conjunto: campos sencillos en agua frente a medidas, y planes clínicos de cada técnica y localización
+      frente al planificador y frente a la verificación experimental.</li>
+  <li><b>Criterio de aceptación</b> del centro: criterio gamma, umbral y porcentaje de aprobación, y qué hacer cuando un plan no cumple.</li>
+</ol>
+<p>Mientras un plan use un modelo sin comisionar, cada resultado lleva el aviso «Modelo de haz no comisionado: resultado no válido
+para uso clínico».</p>
+
+<!-- =================================================================== 4 -->
+<h2 id="verificar">4. Verificar un plan</h2>
+<h3 id="exportar">Exportar el plan desde el planificador</h3>
+<p>Exporte a una carpeta los cuatro objetos DICOM del plan: <b>CT</b>, <b>RTSTRUCT</b>, <b>RTPLAN</b> y <b>RTDOSE</b>. La carpeta
+puede contener varios planes y pacientes; se elige uno en el programa.</p>
+<ul>
+  <li>Exporte la dosis del plan (DoseSummationType PLAN). Si solo hay dosis por haz, se suman.</li>
+  <li>La matriz de dosis del planificador define la rejilla de cálculo. El TERMA se traza a través de todo el CT, así que la
+      atenuación es correcta aunque la matriz no cubra todo el paciente.</li>
+  <li>El conjunto de estructuras debe tener una estructura de tipo EXTERNAL. Sin ella, el cálculo y la gamma usan toda la rejilla.</li>
+  <li>Si el RTSTRUCT no incluye la densidad asignada a la mesa, asígnela en el paso 2.</li>
+</ul>
+
+<h3 id="pasos">Pasos</h3>
+<figure><img src="img/plan.png" alt="Pestaña Verificar plan con un plan cargado"><figcaption>Pestaña Verificar plan con un plan VMAT sintético cargado.</figcaption></figure>
+<p><b>1. Plan exportado del TPS.</b> Pulse <b>Examinar…</b> y elija la carpeta, o arrastre la carpeta sobre el apartado. El navegador
+pide confirmación para leer la carpeta («¿Subir N archivos?» en Chrome): los ficheros no se envían a ningún sitio, solo se leen en
+el ordenador. El programa lee las cabeceras DICOM y llena la lista <b>Plan</b> (el más reciente primero). Debajo se ven el paciente,
+la prescripción, el número de cortes del CT, el conjunto de estructuras, la dosis del TPS y, en rojo, lo que falte. <b>Leer</b> vuelve
+a leer la carpeta (por ejemplo, después de exportar otro plan a ella).</p>
+<p>La tabla <b>Haces</b> muestra cada haz con su máquina, técnica, energía, UM, MLC y modelo de haz. El modelo se elige así:</p>
+<ol>
+  <li>el modelo marcado como <b>Default</b>, si es de la misma energía y modo de fluencia;</li>
+  <li>si no, el último elegido para esa máquina y energía;</li>
+  <li>si no, un modelo de la misma máquina, energía y modo; si no hay, un modelo genérico (sin máquina) de esa energía.</li>
+</ol>
+<p>Con <b>doble clic</b> (o clic derecho) en un haz se cambia el modelo de todos los haces de esa máquina y energía, y la elección se
+recuerda. Los textos en naranja son avisos (modelo sin comisionar, de otra máquina); en rojo, errores que impiden calcular (haz sin
+modelo, MLC no reconocido o sin parámetros en el modelo).</p>
+<p><b>2. Densidades.</b> Elija la <b>Curva HU–densidad</b>. La curva queda asociada al escáner del CT y se propone sola en los planes
+siguientes del mismo escáner.</p>
+<ul>
+  <li><b>Fuera del External: aire</b> (recomendado). Todo lo que queda fuera del External se trata como aire, salvo las estructuras de soporte.</li>
+  <li><b>Conservar estructuras de soporte (mesa)</b>: las estructuras de tipo SUPPORT mantienen su densidad.</li>
+  <li><b>Densidades por estructura…</b>: asigna a una estructura un valor en HU o en densidad electrónica relativa (mesa, bolus,
+      artefactos de contraste o de prótesis). Las densidades asignadas en el RTSTRUCT se respetan sin hacer nada.</li>
+</ul>
+<p><b>3. Rejilla de cálculo.</b> Por defecto, <b>La misma que la dosis del TPS</b>. La opción <b>Vóxel isótropo de … mm</b> permite una
+rejilla más gruesa (más rápida) o más fina.</p>
+<p><b>4. Índice gamma.</b></p>
+<table>
+  <tr><th style="width:30%">Campo</th><th>Significado</th><th style="width:16%">Valor inicial</th></tr>
+  <tr><td>Diferencia de dosis</td><td>Tolerancia de dosis del criterio gamma.</td><td>3%</td></tr>
+  <tr><td>Distancia (DTA)</td><td>Tolerancia de distancia.</td><td>2 mm</td></tr>
+  <tr><td>Tipo</td><td>Global (% de la normalización) o local (% de la dosis en cada punto).</td><td>Global</td></tr>
+  <tr><td>Umbral de dosis</td><td>Solo se evalúan los puntos por encima de este % de la normalización.</td><td>10%</td></tr>
+  <tr><td>Normalización</td><td>Máximo de la dosis de referencia o prescripción del plan.</td><td>Máximo</td></tr>
+  <tr><td>Distribución de referencia</td><td>Dosis del TPS o cálculo independiente.</td><td>Dosis del TPS</td></tr>
+  <tr><td>Aprobado si γ ≤ 1 en al menos</td><td>Porcentaje mínimo de puntos con γ ≤ 1.</td><td>95%</td></tr>
+</table>
+<p>El programa recuerda los últimos valores usados.</p>
+<p><b>5. Resultados.</b> Muestra dónde se guardarán. Deje marcada <b>Guardar la dosis calculada como RTDOSE</b> si quiere importarla en Eclipse.</p>
+<p>Pulse <b>Calcular y comparar</b>. Debajo del botón se ven el avance y el tiempo restante estimado. <b>Cancelar</b> detiene el cálculo
+al terminar el paso en curso. El detalle de cada etapa aparece en la pestaña <b>Registro</b>. Mientras calcula, puede usar otras
+pestañas del navegador; si la pestaña de CalcIndep queda en segundo plano, el cálculo continúa.</p>
+
+<h3 id="resultado">Resultado de la verificación</h3>
+<figure><img src="img/resumen.png" alt="Pestaña Resumen"><figcaption>Pestaña Resumen con el veredicto, los avisos y la tabla por estructura.</figcaption></figure>
+<p>Arriba se muestra el <b>veredicto</b> (CUMPLE o NO CUMPLE), el resultado gamma en el External, la normalización y la dosis en el
+isocentro de los dos cálculos. El recuadro amarillo recoge los avisos, que conviene leer siempre.</p>
+<div class="callout"><b>Criterio de aprobación.</b> El plan cumple si el porcentaje de puntos con γ ≤ 1 alcanza el umbral de aprobación
+dentro del External <b>y</b> en cada estructura anatómica con al menos 10 puntos evaluados. No cuentan las estructuras de tipo
+SUPPORT, MARKER, BOLUS y similares. Así, un fallo localizado en el PTV no queda oculto por un buen resultado global.</div>
+<table>
+  <tr><th style="width:28%">Columna</th><th>Contenido</th></tr>
+  <tr><td>Vol. (cc), Puntos</td><td>Volumen de la estructura y número de puntos evaluados (por encima del umbral).</td></tr>
+  <tr><td>γ≤1 (%)</td><td>Porcentaje de puntos que pasan el criterio gamma.</td></tr>
+  <tr><td>γ medio, γ p95, γ máx.</td><td>Media, percentil 95 y máximo de γ en la estructura.</td></tr>
+  <tr><td>Estado</td><td><b>Cumple</b> o <b>No cumple</b>. <b>No cumple (no cuenta)</b>: no alcanza el umbral, pero es una estructura no
+      anatómica y no interviene en el veredicto. <b>Sin puntos</b>: menos de 10 puntos evaluados.</td></tr>
+  <tr><td>Dmedia TPS, Dmedia cálc.</td><td>Dosis media con cada cálculo (Gy).</td></tr>
+  <tr><td>ΔDmedia, ΔD95, ΔD2, ΔDmáx</td><td>Diferencias del cálculo independiente respecto al TPS (%).</td></tr>
+</table>
+<p><b>Abrir informe HTML</b> abre el informe en una pestaña nueva (se puede imprimir o guardar como PDF desde el navegador).
+<b>Ver ficheros de resultados</b> muestra los ficheros de esa verificación para descargarlos.</p>
+
+<h3 id="visor">Visor de dosis y DVH</h3>
+<figure><img src="img/visor.png" alt="Visor de dosis"><figcaption>Visor de dosis: dosis del TPS, cálculo independiente, diferencia (% de la normalización) y gamma.</figcaption></figure>
+<ul>
+  <li><b>Axial, Coronal, Sagital</b> cambian el plano. La barra deslizante cambia de corte; <b>Ir al isocentro</b> e
+      <b>Ir al máximo de dosis</b> llevan a esos puntos.</li>
+  <li>Al pasar el cursor sobre una imagen se leen los valores en la parte inferior.</li>
+  <li><b>Contornos</b> muestra u oculta los contornos; en la lista de estructuras de la derecha se eligen cuáles.</li>
+  <li><b>Zoom</b>: rueda del ratón sobre la imagen. Para desplazar la imagen ampliada, arrastre con el botón derecho o con
+      Mayúsculas + botón izquierdo. <b>Restablecer zoom</b> recupera la vista completa.</li>
+  <li><b>Perfil</b>: con la dirección <b>Libre</b> se arrastra una línea sobre cualquiera de las imágenes; con <b>Horizontal</b> o
+      <b>Vertical</b> basta un clic. Se muestran la dosis del TPS y la de CalcIndep a lo largo de la línea y su diferencia.
+      <b>Borrar perfil</b> la quita.</li>
+  <li><b>Maximizar visor</b> oculta el panel izquierdo para ver las imágenes más grandes.</li>
+</ul>
+<figure><img src="img/dvh.png" alt="DVH"><figcaption>DVH comparado: línea continua, TPS; discontinua, CalcIndep.</figcaption></figure>
+
+<h3 id="ficheros">Ficheros de cada verificación</h3>
+<p>Cada verificación se guarda en una carpeta propia dentro de <code>resultados</code>, con el nombre
+<code>&lt;ID paciente&gt;_&lt;plan&gt;_&lt;fecha&gt;_&lt;hora&gt;</code>:</p>
+<table>
+  <tr><th style="width:38%">Fichero</th><th>Contenido</th></tr>
+  <tr><td><code>informe_….html</code></td><td>Informe autocontenido (se abre con cualquier navegador y se puede imprimir o guardar como PDF).</td></tr>
+  <tr><td><code>RD_calculo_independiente.dcm</code></td><td>Dosis calculada en formato RTDOSE.</td></tr>
+  <tr><td><code>resumen.json</code></td><td>Datos para trazabilidad: versión del programa, criterio, resultados por estructura, modelos, curva, opciones,
+      avisos, ficheros de entrada y dispositivo de cálculo.</td></tr>
+</table>
+<p>Con la biblioteca en el navegador, los resultados se ven en <b>Archivo → Resultados guardados</b>, donde se pueden abrir, descargar
+(uno a uno o la carpeta entera en ZIP) y eliminar.</p>
+
+<!-- =================================================================== 5 -->
+<h2 id="modelos">5. Modelos de haz</h2>
+<figure><img src="img/modelos.png" alt="Pestaña Modelos de haz"><figcaption>Pestaña Modelos de haz.</figcaption></figure>
+<p>A la izquierda está la lista de modelos de la biblioteca, con su máquina, energía y si están comisionados.</p>
+<ul>
+  <li><b>Default</b>: marca el modelo que se usa por defecto en las verificaciones. Solo puede haber uno; un segundo clic lo desmarca.</li>
+  <li><b>Nuevo</b>, <b>Duplicar</b>, <b>Importar…</b>, <b>Exportar…</b> y <b>Eliminar</b> gestionan la lista. <b>Importar…</b> admite los
+      ficheros JSON de la versión de escritorio.</li>
+</ul>
+<p>En el centro están los parámetros del modelo seleccionado:</p>
+<ul>
+  <li><b>Identificación</b>: nombre, máquina (igual que <code>TreatmentMachineName</code> en el plan), energía, modo de fluencia y la casilla
+      <b>Comisionado y validado</b>.</li>
+  <li><b>Colimación</b>: transmisión de mandíbulas y, para cada MLC (Millennium 120, HD120), transmisión, DLG y ancho de la zona
+      lengüeta-ranura. Son los valores de la configuración de Eclipse; no se ajustan. Si un plan usa un MLC que no está marcado en el
+      modelo, el cálculo no empieza.</li>
+  <li><b>Fuentes</b>, <b>Espectro y contaminación electrónica</b> y <b>Calibración de UM</b>: parámetros físicos que normalmente fija el comisionado.</li>
+</ul>
+<p><b>Guardar cambios</b> guarda el modelo. Si se ha cambiado un parámetro físico, el modelo se recalibra al guardar. <b>Recalibrar</b>
+repite la calibración de las UM con la rejilla indicada. <b>Informe de comisionado</b> abre el informe con el que se creó el modelo.
+A la derecha se ven el espectro y el perfil radial de fluencia.</p>
+
+<!-- =================================================================== 6 -->
+<h2 id="comisionado">6. Comisionado</h2>
+<figure><img src="img/comisionado.png" alt="Pestaña Comisionado"><figcaption>Pestaña Comisionado con datos de haz sintéticos.</figcaption></figure>
+<p>El comisionado ajusta un modelo de haz a las medidas de una máquina. Lee directamente los datos que se cargan en Eclipse.</p>
+<ol>
+  <li><b>Máquina y energía.</b> Nombre del modelo, máquina (exactamente como <code>TreatmentMachineName</code> en el plan), energía y modo de fluencia.</li>
+  <li><b>Curvas medidas.</b> <b>Añadir w2CAD…</b> lee los ficheros de los golden beam data de Varian. <b>Añadir CSV…</b> lee curvas de dos
+      columnas (posición o profundidad, valor); se piden el campo, la DFS, la profundidad y el eje. Se recomiendan PDD de 3×3, 10×10, 20×20
+      y 40×40 cm y perfiles X, Y y diagonales a varias profundidades. Las curvas de cuña se descartan. La pestaña <b>Curvas medidas</b>
+      de la derecha las muestra.</li>
+  <li><b>Factores de campo.</b> Tabla 2D de Varian (por ejemplo <code>06X_00.txt</code>) o CSV con columnas <code>campo_x_mm, campo_y_mm,
+      factor</code>, con su DFS, profundidad y campo de referencia.</li>
+  <li><b>Colimación.</b> Transmisión, DLG y ancho lengüeta-ranura de cada MLC, y transmisión de mandíbulas, tal como están en la configuración de Eclipse.</li>
+  <li><b>Calibración de UM.</b> Dosis por UM en las condiciones de referencia (DFS, profundidad, campo).</li>
+  <li><b>Ajuste.</b> Rejilla de cálculo (use la misma que en las verificaciones) y etapas del ajuste.</li>
+</ol>
+<p>Pulse <b>Comisionar</b>. El ajuste tarda entre 15 y 90 minutos según el número de curvas, la rejilla y el ordenador. No cierre la
+pestaña mientras tanto. Al terminar, el modelo queda en la biblioteca y la pestaña <b>Resultado</b> muestra la comparación con cada
+curva; <b>Abrir informe de comisionado</b> abre el informe completo y <b>Ver el modelo</b> lo muestra en la pestaña de modelos.</p>
+<p><b>Guardar configuración…</b> descarga un JSON con todo lo introducido para repetir el comisionado más adelante. <b>Cargar
+configuración…</b> lo recupera: seleccione a la vez el JSON y los ficheros de datos que cita (w2CAD, CSV y factores de campo). Las
+configuraciones de la versión de escritorio también sirven. Revise el informe de comisionado antes de marcar el modelo como
+<b>comisionado y validado</b>.</p>
+
+<!-- =================================================================== 7 -->
+<h2 id="curvas">7. Curvas HU–densidad</h2>
+<figure><img src="img/curvas.png" alt="Pestaña Curvas HU-densidad"><figcaption>Pestaña Curvas HU–densidad.</figcaption></figure>
+<p>Cada curva convierte el número CT (HU) en densidad electrónica relativa al agua. Use la curva medida en su CT con un maniquí de
+calibración, la misma que tiene configurada en el planificador.</p>
+<ul>
+  <li><b>Nueva</b>, <b>Importar CSV…</b>, <b>Duplicar</b>, <b>Exportar…</b> y <b>Eliminar</b> gestionan las curvas. El CSV tiene dos columnas con
+      cabecera <code>HU,RED</code> y punto como separador decimal.</li>
+  <li>Doble clic en un punto de la tabla para editarlo; <b>Añadir punto</b> y <b>Quitar punto</b> modifican la tabla. La gráfica se
+      actualiza y, debajo, se indica si la curva es válida. <b>Guardar</b> la guarda.</li>
+  <li><b>Escáneres asociados</b>: al verificar un plan, la curva elegida se asocia al escáner del CT (nombre de la estación, fabricante y
+      modelo) y se propone sola en los planes siguientes. <b>Quitar asociación</b> la elimina.</li>
+</ul>
+
+<!-- =================================================================== 8 -->
+<h2 id="ajustes">8. Ajustes</h2>
+<figure><img src="img/ajustes.png" alt="Pestaña Ajustes"><figcaption>Pestaña Ajustes.</figcaption></figure>
+<p>Los cambios se aplican al pulsar <b>Guardar ajustes</b>.</p>
+<table>
+  <tr><th style="width:32%">Ajuste</th><th>Significado</th><th style="width:15%">Por defecto</th></tr>
+  <tr><td>Biblioteca</td><td>En el navegador o en una carpeta (apartado <a href="#datos">Dónde se guardan los datos</a>).</td><td>navegador</td></tr>
+  <tr><td>Resultados</td><td>Subcarpeta <code>resultados</code> de la biblioteca u otra carpeta (Chrome y Edge).</td><td>biblioteca</td></tr>
+  <tr><td>Hilos de cálculo</td><td>Núcleos que usa el cálculo. Use menos si quiere seguir trabajando con el ordenador mientras calcula.</td><td>todos</td></tr>
+  <tr><td>Resolución del mapa de fluencia</td><td>Tamaño de píxel de la fluencia en el plano del isocentro.</td><td>0.5 mm</td></tr>
+  <tr><td>Paso máximo de gantry en arcos</td><td>Los arcos se dividen en incidencias de como máximo este ángulo.</td><td>2°</td></tr>
+  <tr><td>Sector de superposición en arcos</td><td>Las incidencias se agrupan en sectores para la superposición. Con 10° la dosis difiere
+      menos del 0.2% de la obtenida con 3°, con un tiempo unas 3 veces menor.</td><td>10°</td></tr>
+  <tr><td>Margen alrededor del External</td><td>Margen de la región de cálculo.</td><td>20 mm</td></tr>
+  <tr><td>Atenuación del TERMA a través de todo el CT</td><td>Traza los rayos por todo el CT, no solo por la matriz de dosis.</td><td>activado</td></tr>
+</table>
+<p>Se recomienda no cambiar las opciones de cálculo una vez validado el sistema.</p>
+
+<h3 id="gpu">Superposición en GPU</h3>
+<p>La GPU se usa a través de WebGPU, disponible en Chrome y Edge 113 o posterior en Windows 10 y 11. No hay que instalar nada. El
+desplegable <b>Dispositivo</b> tiene estas opciones:</p>
+<ul>
+  <li><b>Automático</b> (recomendado): usa la GPU solo si ha superado la comprobación de precisión y es al menos 1.2 veces más rápida que la CPU.</li>
+  <li><b>Solo CPU</b>.</li>
+  <li><b>Una GPU concreta</b>: se usa si supera la comprobación de precisión, aunque no sea más rápida.</li>
+</ul>
+<p>La comprobación se hace sola la primera vez que se usa una GPU, y de nuevo si cambian el modelo de GPU, el driver, el navegador o el
+código: se calcula un maniquí de tórax con la GPU y con la CPU, y la GPU se acepta si la diferencia máxima es menor del 0.01% de la dosis
+máxima. <b>Comprobar GPU de nuevo</b> la repite. Si la GPU falla durante un cálculo, ese cálculo y los siguientes continúan en la CPU y el
+resultado lleva un aviso. El informe indica siempre dónde se hizo la superposición.</p>
+<p class="note">En Windows 7 (Chrome 109, Firefox 115) no hay WebGPU: el cálculo se hace en la CPU con todos los núcleos. Firefox
+reciente sí tiene WebGPU, pero su implementación fue mucho más lenta que la de Chrome con la misma GPU (en un portátil con Intel gen-9,
+0.6 veces la velocidad de la CPU en Firefox frente a 11.5 veces en Chrome). La comprobación automática lo detecta y calcula en la CPU.
+Para aprovechar la GPU, use Chrome o Edge. El resultado de la comprobación es distinto en cada navegador, porque cada uno tiene su
+propio almacenamiento.</p>
+
+<!-- =================================================================== 9 -->
+<h2 id="problemas">9. Solución de problemas</h2>
+<p>Si el programa da un error, abra <b>Ayuda → Ajustes y registro de errores</b>, descargue el registro y envíelo junto con la
+descripción del problema.</p>
+<dl>
+<dt>La página se queda en blanco o en «Cargando el programa…».</dt>
+<dd>Compruebe que las carpetas <code>js</code> y <code>css</code> están junto a <code>CalcIndep.html</code> y que el navegador es compatible
+(Chrome o Edge 109+, Firefox 115+). Internet Explorer no sirve.</dd>
+<dt>«Este navegador no permite guardar datos de forma permanente…»</dt>
+<dd>El navegador no deja guardar la biblioteca (por ejemplo, en una ventana privada, o por una política del hospital). Use una ventana
+normal o, en Chrome o Edge, elija una carpeta para la biblioteca en <b>Ajustes</b>. Mientras tanto, descargue los resultados antes de cerrar.</dd>
+<dt>Al abrir el programa aparece «El navegador necesita su permiso para usar la carpeta…».</dt>
+<dd>Es normal con la biblioteca en una carpeta: por seguridad, Chrome y Edge piden permiso en cada sesión. Pulse <b>Dar permiso</b>.</dd>
+<dt>No puedo elegir una carpeta para la biblioteca.</dt>
+<dd>Esa opción requiere Chrome o Edge. En Firefox la biblioteca está en el navegador; use <b>Archivo → Exportar/Importar la biblioteca</b>
+para copiarla.</dd>
+<dt>He perdido los modelos al cambiar de navegador u ordenador.</dt>
+<dd>Cada navegador tiene su propio almacenamiento. Exporte la biblioteca en ZIP desde el navegador anterior e impórtela en el nuevo, o use
+una carpeta compartida (Chrome/Edge).</dd>
+<dt>El cálculo es lento.</dt>
+<dd>Compruebe en <b>Ajustes</b> que <b>Hilos de cálculo</b> usa todos los núcleos y que la pestaña de CalcIndep no es la única abierta en
+un navegador con ahorro de energía extremo. En Windows 10/11 use Chrome o Edge actualizados para aprovechar la GPU. Una rejilla isótropa
+de 2.5 o 3 mm es más rápida que una de 1–2 mm.</dd>
+<dt>«Sin memoria» o la pestaña se cierra durante el cálculo.</dt>
+<dd>Cierre otras pestañas, reduzca los hilos de cálculo o use una rejilla más gruesa. En Windows de 32 bits el navegador dispone de muy
+poca memoria; use un ordenador de 64 bits.</dd>
+<dt>«Haces sin modelo de haz» o «— sin modelo —» en la tabla de haces.</dt>
+<dd>No hay ningún modelo de esa energía y modo de fluencia. Haga doble clic en el haz y elija un modelo, o cree uno en <b>Comisionado</b>.</dd>
+<dt>«El modelo … no tiene parámetros del MLC …».</dt>
+<dd>El plan usa un MLC que el modelo no tiene marcado. En <b>Modelos de haz → Colimación</b>, marque ese MLC, introduzca su transmisión, DLG y
+ancho lengüeta-ranura y pulse <b>Guardar cambios</b>.</dd>
+<dt>«Faltan objetos DICOM del plan».</dt>
+<dd>En la carpeta falta el CT, el RTSTRUCT o el RTDOSE del plan elegido, o no están enlazados entre sí. Exporte de nuevo los cuatro objetos juntos.</dd>
+<dt>«El plan no tiene dosis de prescripción».</dt>
+<dd>Se ha elegido la normalización a la prescripción y el RTPLAN no la incluye. Use la normalización al máximo.</dd>
+<dt>Diferencias grandes en zonas concretas.</dt>
+<dd>Revise la mesa y los objetos de alta densidad (asígneles densidad en <b>Densidades por estructura…</b>), que la curva HU–densidad es la
+del escáner correcto, y los avisos del resumen (cuñas, bloques o MLC no modelados).</dd>
+<dt>El navegador bloquea el informe o el manual.</dt>
+<dd>Permita las ventanas emergentes para esta página, o descargue el informe desde <b>Ver ficheros de resultados</b>.</dd>
+</dl>
+
+<!-- =================================================================== 10 -->
+<h2 id="limitaciones">10. Limitaciones conocidas</h2>
+<ul>
+  <li><b>Energías:</b> los kernels incluidos llegan a 6 MeV (6X y 6FFF).</li>
+  <li><b>Accesorios:</b> sin modelo de cuñas físicas, cuñas dinámicas (EDW), bloques ni conos de radiocirugía. El plan se calcula sin ellos y el informe lo avisa.</li>
+  <li><b>MLC:</b> solo Millennium 120 y HD120; los MLC de doble capa no se admiten. DLG constante, una sola transmisión por MLC y franja
+      lengüeta-ranura de ancho fijo.</li>
+  <li><b>Fuente extrafocal:</b> tiene anchuras distintas en X e Y, pero no modela por separado la posición de cada mandíbula.</li>
+  <li><b>Kernel:</b> no varía con el endurecimiento del espectro en profundidad ni con el ablandamiento fuera de eje.</li>
+  <li><b>Medios:</b> se tratan como agua con densidad electrónica escalada; la dosis calculada es aproximadamente dosis en agua dentro del medio.</li>
+  <li><b>Calibración:</b> depende ligeramente del tamaño de vóxel; el modelo se recalibra solo si la rejilla del plan difiere más de 0.6 mm de la de calibración.</li>
+  <li><b>Modelos antiguos:</b> los modelos guardados antes de algunas opciones se cargan sin ellas para que calculen igual que cuando se validaron.</li>
+  <li><b>Navegador:</b> el cálculo depende de que la pestaña siga abierta. Sin GPU, un VMAT de dos arcos tarda de 2 a 10 minutos según el ordenador.</li>
+  <li><b>Validación:</b> la validación frente a medidas y frente al planificador con planes reales debe hacerla cada centro.</li>
+</ul>
+
+<!-- =================================================================== A -->
+<h2 id="calculo">Anexo A. Descripción del cálculo</h2>
+<p><b>Densidades.</b> El CT se convierte a densidad electrónica relativa con la curva HU–RED y se promedia en cada vóxel de la rejilla de
+cálculo (supermuestreo 3×3×3). Fuera del External se asigna aire, salvo las estructuras de tipo SUPPORT. Se respetan las densidades
+asignadas en el RTSTRUCT (<code>REL_ELEC_DENSITY</code>).</p>
+<p><b>Fluencia.</b> Para cada par de puntos de control se calcula de forma analítica la fracción de UM durante la que cada punto del plano
+del isocentro está descubierto por mandíbulas y láminas (movimiento lineal entre puntos de control). Se incluyen la transmisión del MLC, la
+DLG, la transmisión de mandíbulas, el efecto lengüeta-ranura, el tamaño de la fuente primaria, la fuente extrafocal y el perfil radial de
+fluencia. Los arcos se dividen en incidencias de como máximo 2°. El tipo de MLC se identifica por los límites de las láminas del RTPLAN.</p>
+<p><b>TERMA.</b> Se calcula para cada incidencia con trazado de rayos divergentes desde la fuente, el espectro del modelo (12 energías), el
+ablandamiento fuera de eje (lineal o cuadrático con el radio) y la ley del inverso del cuadrado.</p>
+<p><b>Superposición.</b> Collapsed cone (Ahnesjö 1989) con 94 direcciones por incidencia. Los kernels son los de EDKnrc agrupados en 13 bandas
+cenitales y ajustados a dos exponenciales por banda. El transporte en cada cono usa la distancia radiológica (escalado por densidad
+electrónica), que es la corrección de heterogeneidades. En los arcos, las incidencias se agrupan en sectores de 10°. En campos de más de unos
+16 cm, el kernel se inclina según la dirección de los rayos vista desde la fuente.</p>
+<p><b>Contaminación electrónica.</b> Término exponencial con la profundidad radiológica, proporcional a la apertura suavizada.</p>
+<p><b>Calibración.</b> La dosis se pasa a cGy con el factor obtenido al calcular las condiciones de referencia del modelo. Los factores de
+campo resultan del propio cálculo (dispersión en maniquí por la superposición y en el cabezal por la fuente extrafocal).</p>
+<p><b>GPU.</b> En la GPU la superposición se hace en simple precisión (fp32), con desarrollos en serie de las exponenciales para los pasos cortos,
+igual que en la versión de escritorio. Se acepta solo si la diferencia con la CPU en el maniquí de prueba es menor del 0.01% de la dosis máxima.</p>
+<p><b>Gamma.</b> Low et al. (1998). Para cada punto de la referencia por encima del umbral se busca el mínimo de Γ en una red de desplazamientos
+de paso DTA/10 dentro de un radio de 2×DTA, interpolando trilinealmente la distribución evaluada. Se calcula dentro del External y se resume
+por estructura.</p>
+
+<!-- =================================================================== B -->
+<h2 id="web">Anexo B. Diferencias con la versión de escritorio</h2>
+<table>
+  <tr><th style="width:28%">Aspecto</th><th>Versión web</th></tr>
+  <tr><td>Algoritmos</td><td>Los mismos, traducidos de Python a JavaScript paso a paso, incluidas las funciones numéricas (interpolación,
+      filtros, ajustes por mínimos cuadrados, NNLS, erf) para que los resultados coincidan.</td></tr>
+  <tr><td>Resultados</td><td>En los casos de prueba (3D, IMRT, VMAT con Millennium 120 y HD120, campos en agua y calibración), la dosis difiere
+      de la de la versión de escritorio en menos del 0.001% de la dosis máxima y el porcentaje gamma es idéntico.</td></tr>
+  <tr><td>Paralelismo</td><td>Web Workers (un hilo por núcleo) en lugar de procesos de Python.</td></tr>
+  <tr><td>GPU</td><td>WebGPU en lugar de OpenCL. La comprobación de precisión y el criterio de uso son los mismos.</td></tr>
+  <tr><td>Ficheros</td><td>Biblioteca en el navegador o en una carpeta (Chrome/Edge). Los informes y el RTDOSE son iguales.</td></tr>
+  <tr><td>Sin equivalente</td><td>La línea de comandos y el generador de casos sintéticos no están en la versión web.</td></tr>
+</table>
+
+<!-- =================================================================== C -->
+<h2 id="refs">Anexo C. Referencias</h2>
+<ul>
+  <li>Ahnesjö A. Collapsed cone convolution of radiant energy for photon dose calculation in heterogeneous media. <i>Med Phys</i> 1989;16:577–592.</li>
+  <li>Mackie TR, Bielajew AF, Rogers DWO, Battista JJ. Generation of photon energy deposition kernels using the EGS Monte Carlo code. <i>Phys Med Biol</i> 1988;33:1–20.</li>
+  <li>Low DA, Harms WB, Mutic S, Purdy JA. A technique for the quantitative evaluation of dose distributions. <i>Med Phys</i> 1998;25:656–661.</li>
+  <li>Kernels EDKnrc: repositorio <i>conehead</i> de S. Peet (licencia MIT).</li>
+</ul>
+</main>
+</div>
+</body>
+</html>
