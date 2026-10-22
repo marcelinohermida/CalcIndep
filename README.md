@@ -30,8 +30,7 @@ compares both distributions structure by structure with the gamma index of
 Low et al. (1998). The output is a self-contained HTML report and an RTDOSE
 file with the recalculated dose.
 
-The user interface and the manual are in Spanish. Interface labels are quoted
-below in Spanish, followed by their meaning. A browser version with the same
+The user interface and the manual are in Spanish. A browser version with the same
 algorithms and results, which needs no installation, is also available
 (CalcIndep webapp).
 
